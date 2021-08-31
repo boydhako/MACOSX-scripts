@@ -14,5 +14,3 @@ function WATCHTIME {
 	icalBuddy --ect Local,Subscription,Birthday -ec $(echo $xid | sed -e 's~ ~,~g') -uid -b \> -nc -ps "|>|>|" -tf "%H%M.%S[%z]" -po "title,datetime" eventsToday | sort | uniq | awk -F\> -v ename="$eventname" '/ename/ {printf $0"\n"}'
 }
 WATCHTIME
-
-
