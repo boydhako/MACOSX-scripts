@@ -30,6 +30,6 @@ function GENAWSCFG {
 }
 function GENAWSSSHCFNG {
     PREP
-    #GENAWSCFG
+    GENAWSCFG
 }
 GENAWSSSHCFNG
