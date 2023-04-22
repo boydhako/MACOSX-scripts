@@ -1,4 +1,4 @@
-#!/bin/bash -xv
+#!/bin/bash
 pkcs7="$1"
 destdir="$2"
 
@@ -27,10 +27,10 @@ for eline in $(openssl pkcs7 -inform $format -in $pkcs7 -print_certs | egrep -n 
     for bline in $(openssl pkcs7 -inform $format -in $pkcs7 -print_certs | egrep -n -e "-----BEGIN CERTIFICATE-----" | awk -F: '{print $1}'); do
         tempcert="$destdir/temp.crt"
         openssl pkcs7 -inform $format -in $pkcs7 -print_certs | head -$eline | tail +$bline | openssl x509 -text -out $tempcert 2>/dev/null | awk -F= '{print $NF}'
-        subject="$(openssl x509 -in $tempcert -subject -noout | awk -F = '{print $NF}' | sed -e 's/^ //g' -e 's/ /_/g')"
-        hash="$(openssl x509 -in $tempcert -hash -noout | awk -F = '{print $NF}' | sed -e 's/^ //g' -e 's/ /_/g')"
-        openssl x509 -in $tempcert -out "$destdir/$subject-$hash-PEM.crt" -text
-        chmod 444 "$destdir/$subject-$hash-PEM.crt"
-        rm -f $tempcert
+        subject="$(openssl x509 -in $tempcert -subject -noout 2>/dev/null | awk -F = '{print $NF}' | sed -e 's/^ //g' -e 's/ /_/g')"
+        hash="$(openssl x509 -in $tempcert -hash -noout 2>/dev/null | awk -F = '{print $NF}' | sed -e 's/^ //g' -e 's/ /_/g')"
+        openssl x509 -in $tempcert -out "$destdir/$subject-$hash-PEM.crt" -text 2>/dev/null
+        chmod 644 "$destdir/$subject-$hash-PEM.crt" 2>/dev/null
+        rm -f $tempcert 2>/dev/null
       done
 done
