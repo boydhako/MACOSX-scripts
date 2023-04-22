@@ -1,22 +1,23 @@
-#!/bin/bash
+#!/bin/bash -xv
 sshdir="$HOME/.ssh"
 awsconfig="$sshdir/aws.config"
 
 function PREP {
+    export PATH="$PATH:/usr/local/bin"
     if [ ! -d "$sshdir" ]; then
         mkdir -p $sshdir
         chmod 750 $sshdir
     fi
 
     if [ -f "$awsconfig" ]; then
-        touch $awsconfig
-        chmod 640 $awsconfig
+        rm -f $awsconfig
     fi
-    CLEANHOSTS
+    #CLEANHOSTS
 }
 
 function CLEANHOSTS {
-    sed -i '' -e 's#^.*\.compute\.amazonaws\.com,.*##g' $sshdir/known_hosts
+    grep -vie "amazonaws" $sshdir/known_hosts > $sshdir/known_hosts.tmp
+    mv -f $sshdir/known_hosts.tmp $sshdir/known_hosts
 }
 
 function GENAWSCFG {
@@ -25,11 +26,16 @@ function GENAWSCFG {
         name="$(aws ec2 describe-instances --output text --instance-ids $instid --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value}')"
         pubdns="$(aws ec2 describe-instances --output text --instance-ids $instid --query 'Reservations[*].Instances[*].{NetworkInterfaces:PublicDnsName}')"
 
-        printf "host %s\n\thostname %s\n" "$name" "$pubdns" >> $awsconfig
+        if [ ! -z "$pubdns" ]; then
+            printf "host %s\n\thostname %s\n\tuser ec2-user\n" "$name" "$pubdns" >> $awsconfig
+            ssh -o "UpdateHostkeys yes" -o "StrictHostKeyChecking no" -i /Users/bako/.ssh/cronjob-id_rsa $name "hostname -f" 
+        fi
     done
+    chmod 600 $awsconfig
 }
 function GENAWSSSHCFNG {
     PREP
+    CLEANHOSTS
     GENAWSCFG
 }
 GENAWSSSHCFNG
