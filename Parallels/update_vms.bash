@@ -51,9 +51,11 @@ function DETECTOS {
 function OSUPDATE {
     case $id_like in
         redhat)
+            prlctl snapshot $uuid --description "Scripted update $(date)"
             prlctl exec $uuid "dnf clean all && dnf update -y && dnf distro-sync -y && dnf autoremove -y"
             ;;
         debian)
+            prlctl snapshot $uuid --description "Scripted update $(date)"
             prlctl exec $uuid "apt clean all && apt update -y && apt full-upgrade -y && apt auto-remove -y"
             ;;
     esac
