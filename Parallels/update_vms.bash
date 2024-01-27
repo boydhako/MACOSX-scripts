@@ -11,7 +11,7 @@ function STARTVMS {
             fi
         fi
     done
-    sleep 60s
+    sleep 60
 }
 function DETECTOS {
     for uuid in $(prlctl list -a | awk '{print $1}' | sed -e 's/{//g' -e 's/}//g' ); do
