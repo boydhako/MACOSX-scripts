@@ -1,9 +1,13 @@
-#!/bin/bash
+#!/bin/bash -xv
 sshdir="$HOME/.ssh"
 awsconfig="$sshdir/aws.config"
 
 function PREP {
     export PATH="$PATH:/usr/local/bin"
+    ping -t 4 amazonaws.com >/dev/null 2>&1
+    if [ "$?" != "0" ]; then
+        exit 1
+    fi
     if [ ! -d "$sshdir" ]; then
         mkdir -p $sshdir
         chmod 750 $sshdir
