@@ -1,4 +1,4 @@
-#!/bin/bash -xv
+#!/bin/bash
 sshdir="$HOME/.ssh"
 awsconfig="$sshdir/aws.config"
 
@@ -39,7 +39,7 @@ function GENAWSCFG {
     chmod 600 $awsconfig
 }
 function GENAWSSSHCFNG {
-    curl -k https://ec2.us-west-2.amazonaws.com
+    curl --silent -k https://ec2.us-west-2.amazonaws.com
     if [ "$?" != "0" ]; then
         exit 1
     fi
