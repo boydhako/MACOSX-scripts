@@ -1,313 +1,118 @@
-#!/bin/bash -xv
-
-function STARTVMS {
-    for uuid in $(prlctl list -a | awk '{print $1}' | sed -e 's/{//g' -e 's/}//g' ); do
-        if [ "$uuid" != "UUID" ]; then
-            state="$(prlctl list --info $uuid | awk '$1 == "State:" {print $2}')"
-            if [ "$state" != "running" ]; then
-                prlctl start $uuid &
-            elif [ "$state" == "paused" ]; then
-                prlctl resume $uuid &
-            fi
-        fi
-    done
-    sleep 60
-}
-function DETECTOS {
-    for uuid in $(prlctl list -a | awk '{print $1}' | sed -e 's/{//g' -e 's/}//g' ); do
-        vmname="$(prlctl list --all | awk -v uuid="$uuid" '$1 == uuid {print $NF}')"
-        prlctl exec $uuid "uname -a" > /dev/null 2>&1
-        if [ "$(echo $?)" == "0" ]; then
-            os=linux
-        fi
-        prlctl exec $uuid "systeminfo" > /dev/null 2>&1
-        if [ "$(echo $?)" == "0" ]; then
-            os=windows
-        fi
-        if [ "$os" == "linux" ]; then
-            id="$(prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}')"
-            id_like="$(prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g')"
-            
-            case "$id_like" in
-                fedora)
-                    id_like=redhat
-                    ;;
-                rhel_fedora)
-                    id_like=redhat
-                    ;;
-            esac
-            printf "\n=====\nVM Name:\t%s\nVM UUID:\t%s\nOS ID:\t%s\n\n" "$vmname" "$uuid" "$id_like"
-        elif [ "$os" ==  "windows" ]; then
-            prlctl exec $uuid "systeminfo" | awk -F: '$1 == "OS Name" {print $NF}' | sed 's/ /_/g'
-        elif [ -z "$os" ]; then
-            printf "\n\nVM os undetected:\n%s\n\n\n" "$(prlctl list info $uuid)"
-        fi
-        OSUPDATE 
-        unset os
-        unset id
-        unset id_like
-    done
-}
-function OSUPDATE {
-    case $id_like in
-        redhat)
-            prlctl snapshot $uuid --description "Scripted update $(date)"
-            prlctl exec $uuid "dnf clean all && dnf update -y && dnf distro-sync -y && dnf autoremove -y"
-            ;;
-        debian)
-            prlctl snapshot $uuid --description "Scripted update $(date)"
-            prlctl exec $uuid "apt clean all && apt update -y && apt full-upgrade -y && apt auto-remove -y"
-            ;;
-    esac
-    if [ "$os" == "linux" ]; then
-        prlctl exec $uuid "shutdown now"
-    fi
-}
-function UPDATEVMS {
-    STARTVMS
-    DETECTOS
-}
-UPDATEVMS
-+ UPDATEVMS
-+ STARTVMS
-prlctl list -a | awk '{print $1}' | sed -e 's/{//g' -e 's/}//g' 
-++ prlctl list -a
-++ awk '{print $1}'
-++ sed -e 's/{//g' -e 's/}//g'
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-+ '[' UUID '!=' UUID ']'
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-+ '[' 95853edd-1522-4544-8121-2eaaa5ba17eb '!=' UUID ']'
-prlctl list --info $uuid | awk '$1 == "State:" {print $2}'
-++ prlctl list --info 95853edd-1522-4544-8121-2eaaa5ba17eb
-++ awk '$1 == "State:" {print $2}'
-+ state=stopped
-+ '[' stopped '!=' running ']'
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-+ '[' 00108318-138d-4ae6-be80-3520f4a0564d '!=' UUID ']'
-+ prlctl start 95853edd-1522-4544-8121-2eaaa5ba17eb
-prlctl list --info $uuid | awk '$1 == "State:" {print $2}'
-++ prlctl list --info 00108318-138d-4ae6-be80-3520f4a0564d
-++ awk '$1 == "State:" {print $2}'
 Starting the VM...
-+ state=stopped
-+ '[' stopped '!=' running ']'
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-+ '[' 764ff407-a5cb-4e34-b6b3-21f44110b7e7 '!=' UUID ']'
-+ prlctl start 00108318-138d-4ae6-be80-3520f4a0564d
-prlctl list --info $uuid | awk '$1 == "State:" {print $2}'
-++ prlctl list --info 764ff407-a5cb-4e34-b6b3-21f44110b7e7
-++ awk '$1 == "State:" {print $2}'
 Starting the VM...
-+ state=stopped
-+ '[' stopped '!=' running ']'
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-+ '[' ed3df1c0-7b23-4318-a407-995a0ca5f1f2 '!=' UUID ']'
-+ prlctl start 764ff407-a5cb-4e34-b6b3-21f44110b7e7
-prlctl list --info $uuid | awk '$1 == "State:" {print $2}'
-++ prlctl list --info ed3df1c0-7b23-4318-a407-995a0ca5f1f2
-++ awk '$1 == "State:" {print $2}'
 Starting the VM...
-+ state=stopped
-+ '[' stopped '!=' running ']'
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-+ '[' f9d091e8-7595-415b-9180-34bc6a06aaf4 '!=' UUID ']'
-+ prlctl start ed3df1c0-7b23-4318-a407-995a0ca5f1f2
-prlctl list --info $uuid | awk '$1 == "State:" {print $2}'
-++ prlctl list --info f9d091e8-7595-415b-9180-34bc6a06aaf4
-++ awk '$1 == "State:" {print $2}'
 The VM has been successfully started.
 Starting the VM...
-+ state=stopped
-+ '[' stopped '!=' running ']'
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-+ '[' d82dde3c-cbb7-4384-bcef-4e85c3223476 '!=' UUID ']'
-+ prlctl start f9d091e8-7595-415b-9180-34bc6a06aaf4
-prlctl list --info $uuid | awk '$1 == "State:" {print $2}'
-++ prlctl list --info d82dde3c-cbb7-4384-bcef-4e85c3223476
-++ awk '$1 == "State:" {print $2}'
+Starting the VM...
 The VM has been successfully started.
 Starting the VM...
-+ state=running
-+ '[' running '!=' running ']'
-+ '[' running == paused ']'
-+ sleep 60
 The VM has been successfully started.
 The VM has been successfully started.
 The VM has been successfully started.
-+ DETECTOS
-prlctl list -a | awk '{print $1}' | sed -e 's/{//g' -e 's/}//g' 
-++ prlctl list -a
-++ awk '{print $1}'
-++ sed -e 's/{//g' -e 's/}//g'
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-prlctl list --all | awk -v uuid="$uuid" '$1 == uuid {print $NF}'
-++ prlctl list --all
-++ awk -v uuid=UUID '$1 == uuid {print $NF}'
-+ vmname=NAME
-+ prlctl exec UUID 'uname -a'
-echo $?
-++ echo 255
-+ '[' 255 == 0 ']'
-+ prlctl exec UUID systeminfo
-echo $?
-++ echo 255
-+ '[' 255 == 0 ']'
-+ '[' '' == linux ']'
-+ '[' '' == windows ']'
-+ '[' -z '' ']'
-prlctl list info $uuid
-++ prlctl list info UUID
-Failed to get VM config: The virtual machine could not be found. The virtual machine is not registered in the virtual machine directory on your Mac.
-+ printf '\n\nVM os undetected:\n%s\n\n\n' 'UUID                                    STATUS       IP_ADDR         NAME'
-
-
-VM os undetected:
-UUID                                    STATUS       IP_ADDR         NAME
-
-
-+ OSUPDATE
-+ case $id_like in
-+ '[' '' == linux ']'
-+ unset os
-+ unset id
-+ unset id_like
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-prlctl list --all | awk -v uuid="$uuid" '$1 == uuid {print $NF}'
-++ prlctl list --all
-++ awk -v uuid=95853edd-1522-4544-8121-2eaaa5ba17eb '$1 == uuid {print $NF}'
-+ vmname=
-+ prlctl exec 95853edd-1522-4544-8121-2eaaa5ba17eb 'uname -a'
-echo $?
-++ echo 0
-+ '[' 0 == 0 ']'
-+ os=linux
-+ prlctl exec 95853edd-1522-4544-8121-2eaaa5ba17eb systeminfo
-echo $?
-++ echo 127
-+ '[' 127 == 0 ']'
-+ '[' linux == linux ']'
-prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}'
-++ prlctl exec 95853edd-1522-4544-8121-2eaaa5ba17eb 'cat /etc/os-release'
-++ awk -F= '$1 == "ID" {print $2}'
-+ id='"centos"'
-prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g'
-++ prlctl exec 95853edd-1522-4544-8121-2eaaa5ba17eb 'cat /etc/os-release'
-++ awk -F= '$1 == "ID_LIKE" {print $2}'
-++ sed -e 's/"//g' -e 's/ /_/g'
-+ id_like=rhel_fedora
-+ case "$id_like" in
-+ id_like=redhat
-+ printf '\n=====\nVM Name:\t%s\nVM UUID:\t%s\nOS ID:\t%s\n\n' '' 95853edd-1522-4544-8121-2eaaa5ba17eb redhat
+The VM has been successfully started.
 
 =====
-VM Name:	
+VM Name:	prlcentos
 VM UUID:	95853edd-1522-4544-8121-2eaaa5ba17eb
 OS ID:	redhat
-
-+ OSUPDATE
-+ case $id_like in
-date
-++ date
-+ prlctl snapshot 95853edd-1522-4544-8121-2eaaa5ba17eb --description 'Scripted update Sun Feb 25 16:55:29 HST 2024'
+-----
 Creating the snapshot...
-The snapshot with id {bc52f4a9-d2d6-43ef-b840-a0d4a8d5bcba} has been successfully created.
-+ prlctl exec 95853edd-1522-4544-8121-2eaaa5ba17eb 'dnf clean all && dnf update -y && dnf distro-sync -y && dnf autoremove -y'
-277 files removed
-CentOS Stream 8 - AppStream                      15 kB/s |  27 MB     30:28    
-Error: Failed to download metadata for repo 'appstream': Cannot open /var/cache/dnf/appstream-773ef6463612e8e2/repodata/repomd.xml: No such file or directory
-+ '[' linux == linux ']'
-+ prlctl exec 95853edd-1522-4544-8121-2eaaa5ba17eb 'shutdown now'
-+ unset os
-+ unset id
-+ unset id_like
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-prlctl list --all | awk -v uuid="$uuid" '$1 == uuid {print $NF}'
-++ prlctl list --all
-++ awk -v uuid=00108318-138d-4ae6-be80-3520f4a0564d '$1 == uuid {print $NF}'
-+ vmname=
-+ prlctl exec 00108318-138d-4ae6-be80-3520f4a0564d 'uname -a'
-echo $?
-++ echo 0
-+ '[' 0 == 0 ']'
-+ os=linux
-+ prlctl exec 00108318-138d-4ae6-be80-3520f4a0564d systeminfo
-echo $?
-++ echo 127
-+ '[' 127 == 0 ']'
-+ '[' linux == linux ']'
-prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}'
-++ prlctl exec 00108318-138d-4ae6-be80-3520f4a0564d 'cat /etc/os-release'
-++ awk -F= '$1 == "ID" {print $2}'
-+ id=fedora
-prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g'
-++ prlctl exec 00108318-138d-4ae6-be80-3520f4a0564d 'cat /etc/os-release'
-++ awk -F= '$1 == "ID_LIKE" {print $2}'
-++ sed -e 's/"//g' -e 's/ /_/g'
-+ id_like=
-+ case "$id_like" in
-+ printf '\n=====\nVM Name:\t%s\nVM UUID:\t%s\nOS ID:\t%s\n\n' '' 00108318-138d-4ae6-be80-3520f4a0564d ''
+The snapshot with id {cd488b99-a0c0-4b29-95fe-5f83d0f67daa} has been successfully created.
+280 files removed
+CentOS Stream 8 - AppStream                     853 kB/s |  28 MB     00:33    
+CentOS Stream 8 - BaseOS                        1.2 MB/s |  10 MB     00:08    
+CentOS Stream 8 - Debuginfo                     853 kB/s |  96 MB     01:54    
+CentOS Stream 8 - Extras                         16 kB/s |  18 kB     00:01    
+CentOS Stream 8 - Extras common packages        6.8 kB/s | 7.7 kB     00:01    
+CentOS Stream 8 - HighAvailability              604 kB/s | 1.3 MB     00:02    
+CentOS Stream 8 - NFV                           1.2 MB/s | 4.4 MB     00:03    
+CentOS Stream 8 - PowerTools                    1.1 MB/s | 4.9 MB     00:04    
+CentOS Stream 8 - RealTime                      1.6 MB/s | 4.3 MB     00:02    
+CentOS Stream 8 - ResilientStorage              562 kB/s | 1.3 MB     00:02    
+CentOS Stream 8 - BaseOS - Source               227 kB/s | 1.3 MB     00:05    
+CentOS Stream 8 - AppStream - Source            300 kB/s | 1.8 MB     00:06    
+CentOS Stream 8 - PowerTools - Source            47 kB/s | 255 kB     00:05    
+CentOS Stream 8 - Extras - Source               2.0 kB/s |  11 kB     00:05    
+CentOS Stream 8 - HighAvailability - Source     5.7 kB/s |  30 kB     00:05    
+CentOS Stream 8 - RT - Source                   4.1 kB/s |  17 kB     00:04    
+CentOS Stream 8 - ResilientStorage - Source     7.3 kB/s |  27 kB     00:03    
+CentOS Stream 8 - NFV - Source                  2.8 kB/s |  15 kB     00:05    
+CERT Forensics Tools Repository                 239 kB/s | 1.0 MB     00:04    
+CERT Forensics Tools Repository - Splunk        135 kB/s | 370 kB     00:02    
+CERT Forensics Tools Repository - SiLK, IPA, an 4.7 kB/s |  11 kB     00:02    
+ELRepo.org Community Enterprise Linux Repositor  78 kB/s | 203 kB     00:02    
+Extra Packages for Enterprise Linux 8 - x86_64  1.3 MB/s |  16 MB     00:12    
+Extra Packages for Enterprise Linux 8 - x86_64  1.1 MB/s | 6.1 MB     00:05    
+Extra Packages for Enterprise Linux 8 - x86_64  644 kB/s | 2.9 MB     00:04    
+Extra Packages for Enterprise Linux Modular 8 - 242 kB/s | 733 kB     00:03    
+Extra Packages for Enterprise Linux Modular 8 -  31 kB/s | 191 kB     00:06    
+Extra Packages for Enterprise Linux Modular 8 -  10 kB/s |  18 kB     00:01    
+Extra Packages for Enterprise Linux 8 - Next -  118 kB/s | 368 kB     00:03    
+Extra Packages for Enterprise Linux 8 - Next -   41 kB/s |  64 kB     00:01    
+Extra Packages for Enterprise Linux 8 - Next -  4.7 kB/s |  14 kB     00:02    
+Extra Packages for Enterprise Linux 8 - Next -   13 kB/s |  36 kB     00:02    
+Extra Packages for Enterprise Linux 8 - Next -  3.5 kB/s | 7.7 kB     00:02    
+Extra Packages for Enterprise Linux 8 - Next -  1.0 kB/s | 2.4 kB     00:02    
+Extra Packages for Enterprise Linux 8 - Testing 6.6 kB/s | 429 kB     01:05    
+Extra Packages for Enterprise Linux 8 - Testing  76 kB/s | 162 kB     00:02    
+Extra Packages for Enterprise Linux 8 - Testing  28 kB/s |  41 kB     00:01    
+Extra Packages for Enterprise Linux Modular 8 - 341 kB/s | 732 kB     00:02    
+Extra Packages for Enterprise Linux Modular 8 -  93 kB/s | 191 kB     00:02    
+Extra Packages for Enterprise Linux Modular 8 - 7.7 kB/s |  16 kB     00:02    
+packages for the GitHub CLI                     2.2 kB/s | 2.6 kB     00:01    
+Dependencies resolved.
+Nothing to do.
+Complete!
+Last metadata expiration check: 0:00:14 ago on Sat Apr  6 22:10:13 2024.
+Dependencies resolved.
+Nothing to do.
+Complete!
+Last metadata expiration check: 0:00:17 ago on Sat Apr  6 22:10:13 2024.
+Dependencies resolved.
+Nothing to do.
+Complete!
 
 =====
-VM Name:	
+VM Name:	prlfedora
 VM UUID:	00108318-138d-4ae6-be80-3520f4a0564d
-OS ID:	
-
-+ OSUPDATE
-+ case $id_like in
-+ '[' linux == linux ']'
-+ prlctl exec 00108318-138d-4ae6-be80-3520f4a0564d 'shutdown now'
-+ unset os
-+ unset id
-+ unset id_like
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-prlctl list --all | awk -v uuid="$uuid" '$1 == uuid {print $NF}'
-++ prlctl list --all
-++ awk -v uuid=764ff407-a5cb-4e34-b6b3-21f44110b7e7 '$1 == uuid {print $NF}'
-+ vmname=
-+ prlctl exec 764ff407-a5cb-4e34-b6b3-21f44110b7e7 'uname -a'
-echo $?
-++ echo 0
-+ '[' 0 == 0 ']'
-+ os=linux
-+ prlctl exec 764ff407-a5cb-4e34-b6b3-21f44110b7e7 systeminfo
-echo $?
-++ echo 127
-+ '[' 127 == 0 ']'
-+ '[' linux == linux ']'
-prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}'
-++ prlctl exec 764ff407-a5cb-4e34-b6b3-21f44110b7e7 'cat /etc/os-release'
-++ awk -F= '$1 == "ID" {print $2}'
-+ id=kali
-prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g'
-++ prlctl exec 764ff407-a5cb-4e34-b6b3-21f44110b7e7 'cat /etc/os-release'
-++ awk -F= '$1 == "ID_LIKE" {print $2}'
-++ sed -e 's/"//g' -e 's/ /_/g'
-+ id_like=debian
-+ case "$id_like" in
-+ printf '\n=====\nVM Name:\t%s\nVM UUID:\t%s\nOS ID:\t%s\n\n' '' 764ff407-a5cb-4e34-b6b3-21f44110b7e7 debian
+OS ID:	redhat
+-----
+Creating the snapshot...
+The snapshot with id {78df03b5-3a0c-4a31-b4c0-1c6fb6dd9ead} has been successfully created.
+47 files removed
+Copr repo for freeipa-4-8 owned by @freeipa      17 kB/s |  27 kB     00:01    
+Fedora 38 - x86_64                              1.8 MB/s |  83 MB     00:45    
+Fedora 38 openh264 (From Cisco) - x86_64        1.5 kB/s | 2.6 kB     00:01    
+Fedora Modular 38 - x86_64                      481 kB/s | 2.8 MB     00:05    
+Fedora 38 - x86_64 - Updates                    1.9 MB/s |  41 MB     00:21    
+Fedora Modular 38 - x86_64 - Updates            699 kB/s | 2.1 MB     00:03    
+Dependencies resolved.
+Nothing to do.
+Complete!
+Last metadata expiration check: 0:00:07 ago on Sat Apr  6 22:12:27 2024.
+Dependencies resolved.
+Nothing to do.
+Complete!
+Last metadata expiration check: 0:00:09 ago on Sat Apr  6 22:12:27 2024.
+Dependencies resolved.
+Nothing to do.
+Complete!
 
 =====
-VM Name:	
+VM Name:	prlkali
 VM UUID:	764ff407-a5cb-4e34-b6b3-21f44110b7e7
 OS ID:	debian
-
-+ OSUPDATE
-+ case $id_like in
-date
-++ date
-+ prlctl snapshot 764ff407-a5cb-4e34-b6b3-21f44110b7e7 --description 'Scripted update Sun Feb 25 17:26:12 HST 2024'
+-----
 Creating the snapshot...
-The snapshot with id {565dbae7-0cb1-4d0f-af99-c4456c9400aa} has been successfully created.
-+ prlctl exec 764ff407-a5cb-4e34-b6b3-21f44110b7e7 'apt clean all && apt update -y && apt full-upgrade -y && apt auto-remove -y'
+The snapshot with id {f44798e5-e86d-4b42-8a37-a58d55de1e39} has been successfully created.
 
 WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
 
 
 WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
 
+Hit:1 http://http.kali.org/kali kali-rolling InRelease
 Hit:2 https://brave-browser-apt-release.s3.brave.com stable InRelease
-Hit:1 http://kali.download/kali kali-rolling InRelease
 Reading package lists...
 Building dependency tree...
 Reading state information...
@@ -327,178 +132,46 @@ Reading package lists...
 Building dependency tree...
 Reading state information...
 0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
-+ '[' linux == linux ']'
-+ prlctl exec 764ff407-a5cb-4e34-b6b3-21f44110b7e7 'shutdown now'
-+ unset os
-+ unset id
-+ unset id_like
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-prlctl list --all | awk -v uuid="$uuid" '$1 == uuid {print $NF}'
-++ prlctl list --all
-++ awk -v uuid=ed3df1c0-7b23-4318-a407-995a0ca5f1f2 '$1 == uuid {print $NF}'
-+ vmname=
-+ prlctl exec ed3df1c0-7b23-4318-a407-995a0ca5f1f2 'uname -a'
-echo $?
-++ echo 0
-+ '[' 0 == 0 ']'
-+ os=linux
-+ prlctl exec ed3df1c0-7b23-4318-a407-995a0ca5f1f2 systeminfo
-echo $?
-++ echo 127
-+ '[' 127 == 0 ']'
-+ '[' linux == linux ']'
-prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}'
-++ prlctl exec ed3df1c0-7b23-4318-a407-995a0ca5f1f2 'cat /etc/os-release'
-++ awk -F= '$1 == "ID" {print $2}'
-+ id='"rhel"'
-prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g'
-++ prlctl exec ed3df1c0-7b23-4318-a407-995a0ca5f1f2 'cat /etc/os-release'
-++ awk -F= '$1 == "ID_LIKE" {print $2}'
-++ sed -e 's/"//g' -e 's/ /_/g'
-+ id_like=fedora
-+ case "$id_like" in
-+ id_like=redhat
-+ printf '\n=====\nVM Name:\t%s\nVM UUID:\t%s\nOS ID:\t%s\n\n' '' ed3df1c0-7b23-4318-a407-995a0ca5f1f2 redhat
 
 =====
-VM Name:	
+VM Name:	prlrh9
 VM UUID:	ed3df1c0-7b23-4318-a407-995a0ca5f1f2
 OS ID:	redhat
-
-+ OSUPDATE
-+ case $id_like in
-date
-++ date
-+ prlctl snapshot ed3df1c0-7b23-4318-a407-995a0ca5f1f2 --description 'Scripted update Sun Feb 25 17:26:24 HST 2024'
+-----
 Creating the snapshot...
-The snapshot with id {fa0adafb-17b4-4db8-a055-90dbfcb836f9} has been successfully created.
-+ prlctl exec ed3df1c0-7b23-4318-a407-995a0ca5f1f2 'dnf clean all && dnf update -y && dnf distro-sync -y && dnf autoremove -y'
+The snapshot with id {99c498a3-3359-48a4-886c-80afe983de31} has been successfully created.
 Updating Subscription Management repositories.
-65 files removed
+44 files removed
 Updating Subscription Management repositories.
-Extra Packages for Enterprise Linux 9 - x86_64  798 kB/s |  20 MB     00:26    
-Extra Packages for Enterprise Linux 9 openh264  1.6 kB/s | 2.5 kB     00:01    
-Red Hat CodeReady Linux Builder for RHEL 9 x86_ 2.6 MB/s | 6.6 MB     00:02    
-Red Hat Enterprise Linux 9 for x86_64 - AppStre 6.4 MB/s |  29 MB     00:04    
-Red Hat Enterprise Linux 9 for x86_64 - BaseOS  5.1 MB/s |  17 MB     00:03    
-Red Hat Enterprise Linux 9 for x86_64 - Supplem 1.8 kB/s | 2.3 kB     00:01    
-Dependencies resolved.
-================================================================================
- Package   Arch      Version             Repository                        Size
-================================================================================
-Upgrading:
- opensc    x86_64    0.23.0-4.el9_3      rhel-9-for-x86_64-baseos-rpms    1.3 M
-
-Transaction Summary
-================================================================================
-Upgrade  1 Package
-
-Total download size: 1.3 M
-Downloading Packages:
-opensc-0.23.0-4.el9_3.x86_64.rpm                1.3 MB/s | 1.3 MB     00:00    
---------------------------------------------------------------------------------
-Total                                           1.3 MB/s | 1.3 MB     00:00     
-Running transaction check
-Transaction check succeeded.
-Running transaction test
-Transaction test succeeded.
-Running transaction
-  Preparing        :                                                        1/1 
-  Upgrading        : opensc-0.23.0-4.el9_3.x86_64                           1/2 
-  Cleanup          : opensc-0.23.0-3.el9_3.x86_64                           2/2 
-  Running scriptlet: opensc-0.23.0-3.el9_3.x86_64                           2/2 
-  Verifying        : opensc-0.23.0-4.el9_3.x86_64                           1/2 
-  Verifying        : opensc-0.23.0-3.el9_3.x86_64                           2/2 
-Installed products updated.
-
-Upgraded:
-  opensc-0.23.0-4.el9_3.x86_64                                                  
-
-Complete!
-Updating Subscription Management repositories.
-Last metadata expiration check: 0:00:06 ago on Sun Feb 25 17:27:23 2024.
+Extra Packages for Enterprise Linux 9 - x86_64  4.3 MB/s |  21 MB     00:04    
+Extra Packages for Enterprise Linux 9 openh264  1.4 kB/s | 2.5 kB     00:01    
+Red Hat CodeReady Linux Builder for RHEL 9 x86_ 1.6 MB/s | 7.0 MB     00:04    
+Red Hat Enterprise Linux 9 for x86_64 - AppStre 1.2 MB/s |  30 MB     00:25    
+Red Hat Enterprise Linux 9 for x86_64 - BaseOS  1.2 MB/s |  19 MB     00:16    
+Red Hat Enterprise Linux 9 for x86_64 - Supplem 2.6 kB/s | 3.0 kB     00:01    
 Dependencies resolved.
 Nothing to do.
 Complete!
 Updating Subscription Management repositories.
-Last metadata expiration check: 0:00:08 ago on Sun Feb 25 17:27:23 2024.
+Last metadata expiration check: 0:00:04 ago on Sat Apr  6 22:13:59 2024.
 Dependencies resolved.
-================================================================================
- Package          Arch   Version           Repository                      Size
-================================================================================
-Removing:
- grub2-tools-efi  x86_64 1:2.06-70.el9_3.2 @rhel-9-for-x86_64-baseos-rpms 2.7 M
- grub2-tools-extra
-                  x86_64 1:2.06-70.el9_3.2 @rhel-9-for-x86_64-baseos-rpms 5.3 M
-
-Transaction Summary
-================================================================================
-Remove  2 Packages
-
-Freed space: 8.0 M
-Running transaction check
-Transaction check succeeded.
-Running transaction test
-Transaction test succeeded.
-Running transaction
-  Preparing        :                                                        1/1 
-  Erasing          : grub2-tools-extra-1:2.06-70.el9_3.2.x86_64             1/2 
-  Erasing          : grub2-tools-efi-1:2.06-70.el9_3.2.x86_64               2/2 
-  Running scriptlet: grub2-tools-efi-1:2.06-70.el9_3.2.x86_64               2/2 
-  Verifying        : grub2-tools-efi-1:2.06-70.el9_3.2.x86_64               1/2 
-  Verifying        : grub2-tools-extra-1:2.06-70.el9_3.2.x86_64             2/2 
-Installed products updated.
-
-Removed:
-  grub2-tools-efi-1:2.06-70.el9_3.2.x86_64                                      
-  grub2-tools-extra-1:2.06-70.el9_3.2.x86_64                                    
-
+Nothing to do.
 Complete!
-+ '[' linux == linux ']'
-+ prlctl exec ed3df1c0-7b23-4318-a407-995a0ca5f1f2 'shutdown now'
-+ unset os
-+ unset id
-+ unset id_like
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-prlctl list --all | awk -v uuid="$uuid" '$1 == uuid {print $NF}'
-++ prlctl list --all
-++ awk -v uuid=f9d091e8-7595-415b-9180-34bc6a06aaf4 '$1 == uuid {print $NF}'
-+ vmname=
-+ prlctl exec f9d091e8-7595-415b-9180-34bc6a06aaf4 'uname -a'
-echo $?
-++ echo 0
-+ '[' 0 == 0 ']'
-+ os=linux
-+ prlctl exec f9d091e8-7595-415b-9180-34bc6a06aaf4 systeminfo
-echo $?
-++ echo 127
-+ '[' 127 == 0 ']'
-+ '[' linux == linux ']'
-prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}'
-++ prlctl exec f9d091e8-7595-415b-9180-34bc6a06aaf4 'cat /etc/os-release'
-++ awk -F= '$1 == "ID" {print $2}'
-+ id=ubuntu
-prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g'
-++ prlctl exec f9d091e8-7595-415b-9180-34bc6a06aaf4 'cat /etc/os-release'
-++ awk -F= '$1 == "ID_LIKE" {print $2}'
-++ sed -e 's/"//g' -e 's/ /_/g'
-+ id_like=debian
-+ case "$id_like" in
-+ printf '\n=====\nVM Name:\t%s\nVM UUID:\t%s\nOS ID:\t%s\n\n' '' f9d091e8-7595-415b-9180-34bc6a06aaf4 debian
+Updating Subscription Management repositories.
+Last metadata expiration check: 0:00:06 ago on Sat Apr  6 22:13:59 2024.
+Dependencies resolved.
+Nothing to do.
+Complete!
+Failed to set wall message, ignoring: Could not activate remote peer.
+Call to PowerOff failed: Could not activate remote peer.
 
 =====
-VM Name:	
+VM Name:	prlubuntu
 VM UUID:	f9d091e8-7595-415b-9180-34bc6a06aaf4
 OS ID:	debian
-
-+ OSUPDATE
-+ case $id_like in
-date
-++ date
-+ prlctl snapshot f9d091e8-7595-415b-9180-34bc6a06aaf4 --description 'Scripted update Sun Feb 25 17:27:35 HST 2024'
+-----
 Creating the snapshot...
-The snapshot with id {37ccbac2-6d2c-4649-aafd-42300b537988} has been successfully created.
-+ prlctl exec f9d091e8-7595-415b-9180-34bc6a06aaf4 'apt clean all && apt update -y && apt full-upgrade -y && apt auto-remove -y'
+The snapshot with id {ee2bc386-b5b8-4a06-a6e2-0c28e0961d92} has been successfully created.
 
 WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
 
@@ -509,7 +182,10 @@ Hit:1 http://us.archive.ubuntu.com/ubuntu jammy InRelease
 Get:2 http://security.ubuntu.com/ubuntu jammy-security InRelease [110 kB]
 Get:3 http://us.archive.ubuntu.com/ubuntu jammy-updates InRelease [119 kB]
 Hit:4 http://us.archive.ubuntu.com/ubuntu jammy-backports InRelease
-Fetched 229 kB in 1s (193 kB/s)
+Get:5 http://us.archive.ubuntu.com/ubuntu jammy-updates/main i386 Packages [602 kB]
+Get:6 http://us.archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [1519 kB]
+Get:7 http://us.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1060 kB]
+Fetched 3410 kB in 4s (879 kB/s)
 Reading package lists...
 Building dependency tree...
 Reading state information...
@@ -532,34 +208,4 @@ Reading package lists...
 Building dependency tree...
 Reading state information...
 0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
-+ '[' linux == linux ']'
-+ prlctl exec f9d091e8-7595-415b-9180-34bc6a06aaf4 'shutdown now'
-+ unset os
-+ unset id
-+ unset id_like
-+ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
-prlctl list --all | awk -v uuid="$uuid" '$1 == uuid {print $NF}'
-++ prlctl list --all
-++ awk -v uuid=d82dde3c-cbb7-4384-bcef-4e85c3223476 '$1 == uuid {print $NF}'
-+ vmname=
-+ prlctl exec d82dde3c-cbb7-4384-bcef-4e85c3223476 'uname -a'
-echo $?
-++ echo 2
-+ '[' 2 == 0 ']'
-+ prlctl exec d82dde3c-cbb7-4384-bcef-4e85c3223476 systeminfo
-echo $?
-++ echo 0
-+ '[' 0 == 0 ']'
-+ os=windows
-+ '[' windows == linux ']'
-+ '[' windows == windows ']'
-+ prlctl exec d82dde3c-cbb7-4384-bcef-4e85c3223476 systeminfo
-+ awk -F: '$1 == "OS Name" {print $NF}'
-+ sed 's/ /_/g'
-___________________Microsoft_Windows_11_Pro
-+ OSUPDATE
-+ case $id_like in
-+ '[' windows == linux ']'
-+ unset os
-+ unset id
-+ unset id_like
+System is Microsoft_Windows_11_Pro.

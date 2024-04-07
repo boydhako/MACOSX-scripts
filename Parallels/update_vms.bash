@@ -29,6 +29,9 @@ function DETECTOS {
                 id="$(prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}')"
                 id_like="$(prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g')"
                 
+                if [ -z "$id_like" ]; then
+                    id_like="$id"
+                fi
                 case "$id_like" in
                     fedora)
                         id_like=redhat
