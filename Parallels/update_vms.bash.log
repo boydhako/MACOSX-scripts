@@ -1,611 +1,267 @@
-Starting the VM...
-Starting the VM...
-Starting the VM...
-Starting the VM...
-The VM has been successfully started.
-The VM has been successfully started.
-Starting the VM...
-The VM has been successfully started.
-Starting the VM...
-The VM has been successfully started.
-The VM has been successfully started.
-The VM has been successfully started.
+#!/bin/bash -xv
+
+function STARTVMS {
+    for uuid in $(prlctl list -a | awk '{print $1}' | sed -e 's/{//g' -e 's/}//g' ); do
+        if [ "$uuid" != "UUID" ]; then
+            state="$(prlctl list --info "$uuid" | awk '$1 == "State:" {print $2}')"
+            if [ "$state" != "running" ]; then
+                prlctl start $uuid &
+            elif [ "$state" == "paused" ]; then
+                prlctl resume $uuid &
+            fi
+        fi
+    done
+    sleep 60
+}
+function DETECTOS {
+    for uuid in $(prlctl list -a | awk '{print $1}' | sed -e 's/{//g' -e 's/}//g' ); do
+        if [ "$uuid" != "UUID" ]; then
+            vmname="$(prlctl list --all | awk -v uuid="\{$uuid\}" '$1 == uuid {print $NF}')"
+            prlctl exec $uuid "uname -a" > /dev/null 2>&1
+            if [ "$(echo $?)" == "0" ]; then
+                os=linux
+            fi
+            prlctl exec $uuid "systeminfo" > /dev/null 2>&1
+            if [ "$(echo $?)" == "0" ]; then
+                os=windows
+            fi
+            if [ "$os" == "linux" ]; then
+                id="$(prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}')"
+                id_like="$(prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g')"
+                
+                if [ -z "$id_like" ]; then
+                    id_like="$id"
+                fi
+                case "$id_like" in
+                    fedora)
+                        id_like=redhat
+                        ;;
+                    rhel_fedora)
+                        id_like=redhat
+                        ;;
+                esac
+                printf "\n=====\nVM Name:%s\nVM UUID:%s\nOS ID:%s\n-----\n" "$vmname" "$uuid" "$id_like"
+            elif [ "$os" ==  "windows" ]; then
+                id_like="$(prlctl exec $uuid "systeminfo" | dos2unix | awk -F: '$1 == "OS Name" {print $NF}' | sed -e 's/  //g' -e 's/^ //g' -e 's/ /_/g' | tr -d [[:blank:]])"
+            elif [ -z "$os" ]; then
+                printf "\n\nVM os undetected:\n%s\n\n\n" "$(prlctl list info $uuid)"
+            fi
+            OSUPDATE 
+            unset os
+            unset id
+            unset id_like
+        fi
+    done
+}
+function OSUPDATE {
+    case $id_like in
+        redhat)
+            prlctl snapshot $uuid --description "Scripted update $(date)"
+            prlctl exec $uuid "dnf clean all && dnf update -y && dnf distro-sync -y && dnf autoremove -y && touch /.autorelabel"
+            ;;
+        debian)
+            prlctl snapshot $uuid --description "Scripted update $(date)"
+            prlctl exec $uuid "apt clean all && apt update -y && apt full-upgrade -y && apt auto-remove -y && touch /.autorelabel"
+            ;;
+        *Windows*)
+            printf "System is %s.\n" "$( echo $id_like | sed 's/_/ /g')"
+            ;;
+    esac
+    if [ "$os" == "linux" ]; then
+        prlctl exec $uuid "shutdown -r now"
+    fi
+}
+function UPDATEVMS {
+    STARTVMS
+    DETECTOS
+}
+
+UPDATEVMS
++ UPDATEVMS
++ STARTVMS
+prlctl list -a | awk '{print $1}' | sed -e 's/{//g' -e 's/}//g' 
+++ prlctl list -a
+++ awk '{print $1}'
+++ sed -e 's/{//g' -e 's/}//g'
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' UUID '!=' UUID ']'
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' 95853edd-1522-4544-8121-2eaaa5ba17eb '!=' UUID ']'
+prlctl list --info "$uuid" | awk '$1 == "State:" {print $2}'
+++ prlctl list --info 95853edd-1522-4544-8121-2eaaa5ba17eb
+++ awk '$1 == "State:" {print $2}'
++ state=running
++ '[' running '!=' running ']'
++ '[' running == paused ']'
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' 00108318-138d-4ae6-be80-3520f4a0564d '!=' UUID ']'
+prlctl list --info "$uuid" | awk '$1 == "State:" {print $2}'
+++ prlctl list --info 00108318-138d-4ae6-be80-3520f4a0564d
+++ awk '$1 == "State:" {print $2}'
++ state=running
++ '[' running '!=' running ']'
++ '[' running == paused ']'
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' 764ff407-a5cb-4e34-b6b3-21f44110b7e7 '!=' UUID ']'
+prlctl list --info "$uuid" | awk '$1 == "State:" {print $2}'
+++ prlctl list --info 764ff407-a5cb-4e34-b6b3-21f44110b7e7
+++ awk '$1 == "State:" {print $2}'
++ state=running
++ '[' running '!=' running ']'
++ '[' running == paused ']'
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' ed3df1c0-7b23-4318-a407-995a0ca5f1f2 '!=' UUID ']'
+prlctl list --info "$uuid" | awk '$1 == "State:" {print $2}'
+++ prlctl list --info ed3df1c0-7b23-4318-a407-995a0ca5f1f2
+++ awk '$1 == "State:" {print $2}'
++ state=running
++ '[' running '!=' running ']'
++ '[' running == paused ']'
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' f9d091e8-7595-415b-9180-34bc6a06aaf4 '!=' UUID ']'
+prlctl list --info "$uuid" | awk '$1 == "State:" {print $2}'
+++ prlctl list --info f9d091e8-7595-415b-9180-34bc6a06aaf4
+++ awk '$1 == "State:" {print $2}'
++ state=running
++ '[' running '!=' running ']'
++ '[' running == paused ']'
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' d82dde3c-cbb7-4384-bcef-4e85c3223476 '!=' UUID ']'
+prlctl list --info "$uuid" | awk '$1 == "State:" {print $2}'
+++ prlctl list --info d82dde3c-cbb7-4384-bcef-4e85c3223476
+++ awk '$1 == "State:" {print $2}'
++ state=running
++ '[' running '!=' running ']'
++ '[' running == paused ']'
++ sleep 60
++ DETECTOS
+prlctl list -a | awk '{print $1}' | sed -e 's/{//g' -e 's/}//g' 
+++ prlctl list -a
+++ awk '{print $1}'
+++ sed -e 's/{//g' -e 's/}//g'
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' UUID '!=' UUID ']'
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' 95853edd-1522-4544-8121-2eaaa5ba17eb '!=' UUID ']'
+prlctl list --all | awk -v uuid="\{$uuid\}" '$1 == uuid {print $NF}'
+++ prlctl list --all
+++ awk -v 'uuid=\{95853edd-1522-4544-8121-2eaaa5ba17eb\}' '$1 == uuid {print $NF}'
++ vmname=prlcentos
++ prlctl exec 95853edd-1522-4544-8121-2eaaa5ba17eb 'uname -a'
+echo $?
+++ echo 0
++ '[' 0 == 0 ']'
++ os=linux
++ prlctl exec 95853edd-1522-4544-8121-2eaaa5ba17eb systeminfo
+echo $?
+++ echo 127
++ '[' 127 == 0 ']'
++ '[' linux == linux ']'
+prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}'
+++ prlctl exec 95853edd-1522-4544-8121-2eaaa5ba17eb 'cat /etc/os-release'
+++ awk -F= '$1 == "ID" {print $2}'
++ id='"centos"'
+prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g'
+++ prlctl exec 95853edd-1522-4544-8121-2eaaa5ba17eb 'cat /etc/os-release'
+++ awk -F= '$1 == "ID_LIKE" {print $2}'
+++ sed -e 's/"//g' -e 's/ /_/g'
++ id_like=rhel_fedora
++ '[' -z rhel_fedora ']'
++ case "$id_like" in
++ id_like=redhat
++ printf '\n=====\nVM Name:%s\nVM UUID:%s\nOS ID:%s\n-----\n' prlcentos 95853edd-1522-4544-8121-2eaaa5ba17eb redhat
 
 =====
-VM Name:	prlcentos
-VM UUID:	95853edd-1522-4544-8121-2eaaa5ba17eb
-OS ID:	redhat
+VM Name:prlcentos
+VM UUID:95853edd-1522-4544-8121-2eaaa5ba17eb
+OS ID:redhat
 -----
++ OSUPDATE
++ case $id_like in
+date
+++ date
++ prlctl snapshot 95853edd-1522-4544-8121-2eaaa5ba17eb --description 'Scripted update Tue Apr  9 00:16:43 HST 2024'
 Creating the snapshot...
-The snapshot with id {1dd1b4b3-057c-4bd5-9776-64205eec3401} has been successfully created.
-280 files removed
-CentOS Stream 8 - AppStream                      80 kB/s |  28 MB     05:59    
-CentOS Stream 8 - BaseOS                        1.1 MB/s |  10 MB     00:09    
-CentOS Stream 8 - Debuginfo                     962 kB/s |  97 MB     01:43    
-CentOS Stream 8 - Extras                         10 kB/s |  18 kB     00:01    
-CentOS Stream 8 - Extras common packages        5.8 kB/s | 7.7 kB     00:01    
-CentOS Stream 8 - HighAvailability              551 kB/s | 1.3 MB     00:02    
-CentOS Stream 8 - NFV                           857 kB/s | 4.4 MB     00:05    
-CentOS Stream 8 - PowerTools                    853 kB/s | 5.0 MB     00:05    
-CentOS Stream 8 - RealTime                      1.1 MB/s | 4.3 MB     00:04    
-CentOS Stream 8 - ResilientStorage              667 kB/s | 1.3 MB     00:02    
-CentOS Stream 8 - BaseOS - Source               308 kB/s | 1.3 MB     00:04    
-CentOS Stream 8 - AppStream - Source            774 kB/s | 1.8 MB     00:02    
-CentOS Stream 8 - PowerTools - Source           168 kB/s | 255 kB     00:01    
-CentOS Stream 8 - Extras - Source               6.8 kB/s |  11 kB     00:01    
-CentOS Stream 8 - HighAvailability - Source      22 kB/s |  30 kB     00:01    
-CentOS Stream 8 - RT - Source                    13 kB/s |  17 kB     00:01    
-CentOS Stream 8 - ResilientStorage - Source      17 kB/s |  27 kB     00:01    
-CentOS Stream 8 - NFV - Source                   11 kB/s |  15 kB     00:01    
-CERT Forensics Tools Repository                 178 kB/s | 1.0 MB     00:06    
-CERT Forensics Tools Repository - Splunk        127 kB/s | 370 kB     00:02    
-CERT Forensics Tools Repository - SiLK, IPA, an 4.7 kB/s |  11 kB     00:02    
-ELRepo.org Community Enterprise Linux Repositor  68 kB/s | 203 kB     00:02    
-Extra Packages for Enterprise Linux 8 - x86_64  808 kB/s |  16 MB     00:20    
-Extra Packages for Enterprise Linux 8 - x86_64  405 kB/s | 6.1 MB     00:15    
-Extra Packages for Enterprise Linux 8 - x86_64  841 kB/s | 2.9 MB     00:03    
-Extra Packages for Enterprise Linux Modular 8 - 252 kB/s | 733 kB     00:02    
-Extra Packages for Enterprise Linux Modular 8 -  97 kB/s | 191 kB     00:01    
-Extra Packages for Enterprise Linux Modular 8 -  11 kB/s |  18 kB     00:01    
-Extra Packages for Enterprise Linux 8 - Next -  148 kB/s | 368 kB     00:02    
-Extra Packages for Enterprise Linux 8 - Next -   29 kB/s |  64 kB     00:02    
-Extra Packages for Enterprise Linux 8 - Next -  6.7 kB/s |  14 kB     00:02    
-Extra Packages for Enterprise Linux 8 - Next -   18 kB/s |  36 kB     00:01    
-Extra Packages for Enterprise Linux 8 - Next -  3.8 kB/s | 7.7 kB     00:02    
-Extra Packages for Enterprise Linux 8 - Next -  818  B/s | 2.4 kB     00:03    
-Extra Packages for Enterprise Linux 8 - Testing 243 kB/s | 440 kB     00:01    
-Extra Packages for Enterprise Linux 8 - Testing  63 kB/s | 174 kB     00:02    
-Extra Packages for Enterprise Linux 8 - Testing  22 kB/s |  42 kB     00:01    
-Extra Packages for Enterprise Linux Modular 8 - 170 kB/s | 732 kB     00:04    
-Extra Packages for Enterprise Linux Modular 8 -  66 kB/s | 191 kB     00:02    
-Extra Packages for Enterprise Linux Modular 8 - 6.6 kB/s |  16 kB     00:02    
-packages for the GitHub CLI                     1.4 kB/s | 2.6 kB     00:01    
-Dependencies resolved.
-================================================================================
- Package                Arch        Version                Repository      Size
-================================================================================
-Installing:
- kernel                 x86_64      4.18.0-552.el8         baseos          10 M
- kernel-core            x86_64      4.18.0-552.el8         baseos          44 M
- kernel-devel           x86_64      4.18.0-552.el8         baseos          28 M
- kernel-modules         x86_64      4.18.0-552.el8         baseos          36 M
-Upgrading:
- bash                   x86_64      4.4.20-5.el8           baseos         1.6 M
- bpftool                x86_64      4.18.0-552.el8         baseos          11 M
- expat                  x86_64      2.2.5-13.el8           baseos         114 k
- firefox                x86_64      115.9.1-1.el8          appstream      115 M
- kernel-headers         x86_64      4.18.0-552.el8         baseos          12 M
- kernel-tools           x86_64      4.18.0-552.el8         baseos          11 M
- kernel-tools-libs      x86_64      4.18.0-552.el8         baseos          10 M
- less                   x86_64      530-2.el8              baseos         165 k
-Removing:
- kernel                 x86_64      4.18.0-546.el8         @baseos          0  
- kernel-core            x86_64      4.18.0-546.el8         @baseos         71 M
- kernel-devel           x86_64      4.18.0-546.el8         @baseos         53 M
- kernel-modules         x86_64      4.18.0-546.el8         @baseos         25 M
-
-Transaction Summary
-================================================================================
-Install  4 Packages
-Upgrade  8 Packages
-Remove   4 Packages
-
-Total download size: 280 M
-Downloading Packages:
-(1/12): kernel-4.18.0-552.el8.x86_64.rpm        560 kB/s |  10 MB     00:18    
-(2/12): kernel-core-4.18.0-552.el8.x86_64.rpm   728 kB/s |  44 MB     01:01    
-(3/12): kernel-modules-4.18.0-552.el8.x86_64.rp 619 kB/s |  36 MB     01:00    
-(4/12): bash-4.4.20-5.el8.x86_64.rpm            803 kB/s | 1.6 MB     00:02    
-(5/12): kernel-devel-4.18.0-552.el8.x86_64.rpm  353 kB/s |  28 MB     01:22    
-(6/12): expat-2.2.5-13.el8.x86_64.rpm           499 kB/s | 114 kB     00:00    
-(7/12): bpftool-4.18.0-552.el8.x86_64.rpm       766 kB/s |  11 MB     00:14    
-(8/12): kernel-headers-4.18.0-552.el8.x86_64.rp 845 kB/s |  12 MB     00:14    
-(9/12): kernel-tools-4.18.0-552.el8.x86_64.rpm  334 kB/s |  11 MB     00:32    
-(10/12): less-530-2.el8.x86_64.rpm               20 kB/s | 165 kB     00:08    
-(11/12): kernel-tools-libs-4.18.0-552.el8.x86_6 257 kB/s |  10 MB     00:41    
-(12/12): firefox-115.9.1-1.el8.x86_64.rpm       675 kB/s | 115 MB     02:54    
---------------------------------------------------------------------------------
-Total                                           1.2 MB/s | 280 MB     03:57     
-Running transaction check
-Transaction check succeeded.
-Running transaction test
-Transaction test succeeded.
-Running transaction
-  Preparing        :                                                        1/1 
-  Running scriptlet: bash-4.4.20-5.el8.x86_64                               1/1 
-  Upgrading        : bash-4.4.20-5.el8.x86_64                              1/24 
-  Running scriptlet: bash-4.4.20-5.el8.x86_64                              1/24 
-  Installing       : kernel-core-4.18.0-552.el8.x86_64                     2/24 
-  Running scriptlet: kernel-core-4.18.0-552.el8.x86_64                     2/24 
-  Installing       : kernel-modules-4.18.0-552.el8.x86_64                  3/24 
-  Running scriptlet: kernel-modules-4.18.0-552.el8.x86_64                  3/24 
-  Upgrading        : kernel-tools-libs-4.18.0-552.el8.x86_64               4/24 
-  Running scriptlet: kernel-tools-libs-4.18.0-552.el8.x86_64               4/24 
-  Upgrading        : kernel-tools-4.18.0-552.el8.x86_64                    5/24 
-  Running scriptlet: kernel-tools-4.18.0-552.el8.x86_64                    5/24 
-  Installing       : kernel-4.18.0-552.el8.x86_64                          6/24 
-  Installing       : kernel-devel-4.18.0-552.el8.x86_64                    7/24 
-  Running scriptlet: kernel-devel-4.18.0-552.el8.x86_64                    7/24 
-  Upgrading        : firefox-115.9.1-1.el8.x86_64                          8/24 
-  Running scriptlet: firefox-115.9.1-1.el8.x86_64                          8/24 
-  Upgrading        : less-530-2.el8.x86_64                                 9/24 
-  Upgrading        : kernel-headers-4.18.0-552.el8.x86_64                 10/24 
-  Upgrading        : expat-2.2.5-13.el8.x86_64                            11/24 
-  Upgrading        : bpftool-4.18.0-552.el8.x86_64                        12/24 
-  Running scriptlet: kernel-tools-4.18.0-548.el8.x86_64                   13/24 
-  Cleanup          : kernel-tools-4.18.0-548.el8.x86_64                   13/24 
-  Running scriptlet: kernel-tools-4.18.0-548.el8.x86_64                   13/24 
-  Running scriptlet: firefox-115.8.0-1.el8.x86_64                         14/24 
-  Cleanup          : firefox-115.8.0-1.el8.x86_64                         14/24 
-  Running scriptlet: firefox-115.8.0-1.el8.x86_64                         14/24 
-  Erasing          : kernel-4.18.0-546.el8.x86_64                         15/24 
-  Running scriptlet: kernel-4.18.0-546.el8.x86_64                         15/24 
-  Erasing          : kernel-devel-4.18.0-546.el8.x86_64                   16/24 
-  Cleanup          : kernel-headers-4.18.0-548.el8.x86_64                 17/24 
-  Erasing          : kernel-modules-4.18.0-546.el8.x86_64                 18/24 
-  Running scriptlet: kernel-modules-4.18.0-546.el8.x86_64                 18/24 
-  Running scriptlet: kernel-core-4.18.0-546.el8.x86_64                    19/24 
-dkms: removing: parallels-tools 19.3.0.54924 (4.18.0-546.el8.x86_64) (x86_64)
-Module parallels-tools-19.3.0.54924 for kernel 4.18.0-546.el8.x86_64 (x86_64).
-Before uninstall, this module version was ACTIVE on this kernel.
-Removing any linked weak-modules
-
-prl_tg.ko.xz:
- - Uninstallation
-   - Deleting from: /lib/modules/4.18.0-546.el8.x86_64/extra/
- - Original module
-   - No original module was found for this module on this kernel.
-   - Use the dkms install command to reinstall any previous module version.
-
-prl_fs.ko.xz:
- - Uninstallation
-   - Deleting from: /lib/modules/4.18.0-546.el8.x86_64/extra/
- - Original module
-   - No original module was found for this module on this kernel.
-   - Use the dkms install command to reinstall any previous module version.
-
-prl_fs_freeze.ko.xz:
- - Uninstallation
-   - Deleting from: /lib/modules/4.18.0-546.el8.x86_64/extra/
- - Original module
-   - No original module was found for this module on this kernel.
-   - Use the dkms install command to reinstall any previous module version.
-
-prl_vid.ko.xz:
- - Uninstallation
-   - Deleting from: /lib/modules/4.18.0-546.el8.x86_64/extra/
- - Original module
-   - No original module was found for this module on this kernel.
-   - Use the dkms install command to reinstall any previous module version.
-depmod...
-
-  Erasing          : kernel-core-4.18.0-546.el8.x86_64                    19/24 
-warning: file /lib/modules/4.18.0-546.el8.x86_64/updates: remove failed: No such file or directory
-
-  Running scriptlet: kernel-core-4.18.0-546.el8.x86_64                    19/24 
-  Cleanup          : kernel-tools-libs-4.18.0-548.el8.x86_64              20/24 
-  Running scriptlet: kernel-tools-libs-4.18.0-548.el8.x86_64              20/24 
-  Cleanup          : less-530-1.el8.x86_64                                21/24 
-  Cleanup          : bash-4.4.20-4.el8.x86_64                             22/24 
-  Running scriptlet: bash-4.4.20-4.el8.x86_64                             22/24 
-  Cleanup          : expat-2.2.5-11.el8.x86_64                            23/24 
-  Cleanup          : bpftool-4.18.0-548.el8.x86_64                        24/24 
-  Running scriptlet: kernel-core-4.18.0-552.el8.x86_64                    24/24 
-dkms: running auto installation service for kernel 4.18.0-552.el8.x86_64
-Error! parallels-tools/19.2.0.54827 is broken! Missing the source directory or the symbolic link pointing to it.
-Manual intervention is required!
-Sign command: /lib/modules/4.18.0-552.el8.x86_64/build/scripts/sign-file
-Signing key: /var/lib/dkms/mok.key
-Public certificate (MOK): /var/lib/dkms/mok.pub
-
-Building module:
-Cleaning build area...
-Building module(s)......
-Signing module /var/lib/dkms/parallels-tools/19.3.0.54924/build/prl_tg/Toolgate/Guest/Linux/prl_tg/prl_tg.ko
-Signing module /var/lib/dkms/parallels-tools/19.3.0.54924/build/prl_fs/SharedFolders/Guest/Linux/prl_fs/prl_fs.ko
-Signing module /var/lib/dkms/parallels-tools/19.3.0.54924/build/prl_fs_freeze/Snapshot/Guest/Linux/prl_freeze/prl_fs_freeze.ko
-Signing module /var/lib/dkms/parallels-tools/19.3.0.54924/build/prl_vid/Video/Guest/Linux/kmod/prl_vid.ko
-Cleaning build area...
-
-prl_tg.ko.xz:
-Running module version sanity check.
- - Original module
-   - No original module exists within this kernel
- - Installation
-   - Installing to /lib/modules/4.18.0-552.el8.x86_64/extra/
-
-prl_fs.ko.xz:
-Running module version sanity check.
- - Original module
-   - No original module exists within this kernel
- - Installation
-   - Installing to /lib/modules/4.18.0-552.el8.x86_64/extra/
-
-prl_fs_freeze.ko.xz:
-Running module version sanity check.
- - Original module
-   - No original module exists within this kernel
- - Installation
-   - Installing to /lib/modules/4.18.0-552.el8.x86_64/extra/
-
-prl_vid.ko.xz:
-Running module version sanity check.
- - Original module
-   - No original module exists within this kernel
- - Installation
-   - Installing to /lib/modules/4.18.0-552.el8.x86_64/extra/
-Adding any weak-modules
-depmod....
-dkms autoinstall on 4.18.0-552.el8.x86_64/x86_64 succeeded for parallels-tools
-dkms: autoinstall for kernel 4.18.0-552.el8.x86_64 Done. 
-
-  Running scriptlet: kernel-modules-4.18.0-552.el8.x86_64                 24/24 
-  Running scriptlet: firefox-115.9.1-1.el8.x86_64                         24/24 
-  Running scriptlet: bpftool-4.18.0-548.el8.x86_64                        24/24 
-  Verifying        : kernel-4.18.0-552.el8.x86_64                          1/24 
-  Verifying        : kernel-core-4.18.0-552.el8.x86_64                     2/24 
-  Verifying        : kernel-devel-4.18.0-552.el8.x86_64                    3/24 
-  Verifying        : kernel-modules-4.18.0-552.el8.x86_64                  4/24 
-  Verifying        : firefox-115.9.1-1.el8.x86_64                          5/24 
-  Verifying        : firefox-115.8.0-1.el8.x86_64                          6/24 
-  Verifying        : bash-4.4.20-5.el8.x86_64                              7/24 
-  Verifying        : bash-4.4.20-4.el8.x86_64                              8/24 
-  Verifying        : bpftool-4.18.0-552.el8.x86_64                         9/24 
-  Verifying        : bpftool-4.18.0-548.el8.x86_64                        10/24 
-  Verifying        : expat-2.2.5-13.el8.x86_64                            11/24 
-  Verifying        : expat-2.2.5-11.el8.x86_64                            12/24 
-  Verifying        : kernel-headers-4.18.0-552.el8.x86_64                 13/24 
-  Verifying        : kernel-headers-4.18.0-548.el8.x86_64                 14/24 
-  Verifying        : kernel-tools-4.18.0-552.el8.x86_64                   15/24 
-  Verifying        : kernel-tools-4.18.0-548.el8.x86_64                   16/24 
-  Verifying        : kernel-tools-libs-4.18.0-552.el8.x86_64              17/24 
-  Verifying        : kernel-tools-libs-4.18.0-548.el8.x86_64              18/24 
-  Verifying        : less-530-2.el8.x86_64                                19/24 
-  Verifying        : less-530-1.el8.x86_64                                20/24 
-  Verifying        : kernel-4.18.0-546.el8.x86_64                         21/24 
-  Verifying        : kernel-core-4.18.0-546.el8.x86_64                    22/24 
-  Verifying        : kernel-devel-4.18.0-546.el8.x86_64                   23/24 
-  Verifying        : kernel-modules-4.18.0-546.el8.x86_64                 24/24 
-
-Upgraded:
-  bash-4.4.20-5.el8.x86_64                  bpftool-4.18.0-552.el8.x86_64       
-  expat-2.2.5-13.el8.x86_64                 firefox-115.9.1-1.el8.x86_64        
-  kernel-headers-4.18.0-552.el8.x86_64      kernel-tools-4.18.0-552.el8.x86_64  
-  kernel-tools-libs-4.18.0-552.el8.x86_64   less-530-2.el8.x86_64               
-Installed:
-  kernel-4.18.0-552.el8.x86_64          kernel-core-4.18.0-552.el8.x86_64      
-  kernel-devel-4.18.0-552.el8.x86_64    kernel-modules-4.18.0-552.el8.x86_64   
-Removed:
-  kernel-4.18.0-546.el8.x86_64          kernel-core-4.18.0-546.el8.x86_64      
-  kernel-devel-4.18.0-546.el8.x86_64    kernel-modules-4.18.0-546.el8.x86_64   
-
-Complete!
-Last metadata expiration check: 0:07:18 ago on Mon Apr  8 21:46:52 2024.
+The snapshot with id {e91507f5-cf00-4f29-b99c-5767f3c3b021} has been successfully created.
++ prlctl exec 95853edd-1522-4544-8121-2eaaa5ba17eb 'dnf clean all && dnf update -y && dnf distro-sync -y && dnf autoremove -y && touch /.autorelabel'
+120 files removed
+CentOS Stream 8 - AppStream                     1.4 MB/s |  28 MB     00:19    
+CentOS Stream 8 - BaseOS                        1.3 MB/s |  10 MB     00:07    
+CentOS Stream 8 - Extras                         11 kB/s |  18 kB     00:01    
+CentOS Stream 8 - Extras common packages        6.6 kB/s | 7.7 kB     00:01    
+CentOS Stream 8 - HighAvailability              685 kB/s | 1.3 MB     00:01    
+CentOS Stream 8 - NFV                           433 kB/s | 4.4 MB     00:10    
+CentOS Stream 8 - PowerTools                    1.1 MB/s | 5.0 MB     00:04    
+CentOS Stream 8 - RealTime                      712 kB/s | 4.3 MB     00:06    
+CentOS Stream 8 - ResilientStorage              425 kB/s | 1.3 MB     00:03    
+CERT Forensics Tools Repository                  93 kB/s | 1.0 MB     00:11    
+CERT Forensics Tools Repository - Splunk        116 kB/s | 370 kB     00:03    
+CERT Forensics Tools Repository - SiLK, IPA, an 4.1 kB/s |  11 kB     00:02    
+ELRepo.org Community Enterprise Linux Repositor  76 kB/s | 203 kB     00:02    
+Extra Packages for Enterprise Linux 8 - x86_64  918 kB/s |  16 MB     00:18    
+Extra Packages for Enterprise Linux Modular 8 - 311 kB/s | 733 kB     00:02    
+Extra Packages for Enterprise Linux 8 - Next -  177 kB/s | 368 kB     00:02    
+packages for the GitHub CLI                     1.8 kB/s | 2.6 kB     00:01    
 Dependencies resolved.
 Nothing to do.
 Complete!
-Last metadata expiration check: 0:07:21 ago on Mon Apr  8 21:46:52 2024.
+Last metadata expiration check: 0:00:10 ago on Tue Apr  9 00:19:16 2024.
 Dependencies resolved.
 Nothing to do.
 Complete!
+Last metadata expiration check: 0:00:15 ago on Tue Apr  9 00:19:16 2024.
+Dependencies resolved.
+Nothing to do.
+Complete!
++ '[' linux == linux ']'
++ prlctl exec 95853edd-1522-4544-8121-2eaaa5ba17eb 'shutdown -r now'
++ unset os
++ unset id
++ unset id_like
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' 00108318-138d-4ae6-be80-3520f4a0564d '!=' UUID ']'
+prlctl list --all | awk -v uuid="\{$uuid\}" '$1 == uuid {print $NF}'
+++ prlctl list --all
+++ awk -v 'uuid=\{00108318-138d-4ae6-be80-3520f4a0564d\}' '$1 == uuid {print $NF}'
++ vmname=prlfedora
++ prlctl exec 00108318-138d-4ae6-be80-3520f4a0564d 'uname -a'
+echo $?
+++ echo 0
++ '[' 0 == 0 ']'
++ os=linux
++ prlctl exec 00108318-138d-4ae6-be80-3520f4a0564d systeminfo
+echo $?
+++ echo 127
++ '[' 127 == 0 ']'
++ '[' linux == linux ']'
+prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}'
+++ prlctl exec 00108318-138d-4ae6-be80-3520f4a0564d 'cat /etc/os-release'
+++ awk -F= '$1 == "ID" {print $2}'
++ id=fedora
+prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g'
+++ prlctl exec 00108318-138d-4ae6-be80-3520f4a0564d 'cat /etc/os-release'
+++ awk -F= '$1 == "ID_LIKE" {print $2}'
+++ sed -e 's/"//g' -e 's/ /_/g'
++ id_like=
++ '[' -z '' ']'
++ id_like=fedora
++ case "$id_like" in
++ id_like=redhat
++ printf '\n=====\nVM Name:%s\nVM UUID:%s\nOS ID:%s\n-----\n' prlfedora 00108318-138d-4ae6-be80-3520f4a0564d redhat
 
 =====
-VM Name:	prlfedora
-VM UUID:	00108318-138d-4ae6-be80-3520f4a0564d
-OS ID:	redhat
+VM Name:prlfedora
+VM UUID:00108318-138d-4ae6-be80-3520f4a0564d
+OS ID:redhat
 -----
++ OSUPDATE
++ case $id_like in
+date
+++ date
++ prlctl snapshot 00108318-138d-4ae6-be80-3520f4a0564d --description 'Scripted update Tue Apr  9 00:19:38 HST 2024'
 Creating the snapshot...
-The snapshot with id {5dd0a17f-e099-469e-b652-71f61ef4bc55} has been successfully created.
+The snapshot with id {73dc76f4-89e9-4eca-a079-48d277aba902} has been successfully created.
++ prlctl exec 00108318-138d-4ae6-be80-3520f4a0564d 'dnf clean all && dnf update -y && dnf distro-sync -y && dnf autoremove -y && touch /.autorelabel'
 47 files removed
-Copr repo for freeipa-4-8 owned by @freeipa      15 kB/s |  27 kB     00:01    
-Fedora 38 - x86_64                              1.3 MB/s |  83 MB     01:03    
-Fedora 38 openh264 (From Cisco) - x86_64        1.3 kB/s | 2.6 kB     00:02    
-Fedora Modular 38 - x86_64                      701 kB/s | 2.8 MB     00:04    
-Fedora 38 - x86_64 - Updates                    1.3 MB/s |  41 MB     00:32    
-Fedora Modular 38 - x86_64 - Updates            769 kB/s | 2.1 MB     00:02    
-Dependencies resolved.
-Nothing to do.
-Complete!
-Last metadata expiration check: 0:00:07 ago on Mon Apr  8 21:56:35 2024.
-Dependencies resolved.
-Nothing to do.
-Complete!
-Last metadata expiration check: 0:00:09 ago on Mon Apr  8 21:56:35 2024.
-Dependencies resolved.
-Nothing to do.
-Complete!
-
-=====
-VM Name:	prlkali
-VM UUID:	764ff407-a5cb-4e34-b6b3-21f44110b7e7
-OS ID:	debian
------
-Creating the snapshot...
-The snapshot with id {01aad1ea-6f21-4b6e-bbf8-b85b817b63c9} has been successfully created.
-
-WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
-
-
-WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
-
-Hit:2 https://brave-browser-apt-release.s3.brave.com stable InRelease
-Get:1 http://mirrors.ocf.berkeley.edu/kali kali-rolling InRelease [41.5 kB]
-Get:3 http://mirrors.ocf.berkeley.edu/kali kali-rolling/main amd64 Packages [19.5 MB]
-Get:4 http://mirrors.ocf.berkeley.edu/kali kali-rolling/main amd64 Contents (deb) [45.9 MB]
-Fetched 65.4 MB in 42s (1569 kB/s)
-Reading package lists...
-Building dependency tree...
-Reading state information...
-24 packages can be upgraded. Run 'apt list --upgradable' to see them.
-
-WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
-
-Reading package lists...
-Building dependency tree...
-Reading state information...
-Calculating upgrade...
-The following packages will be upgraded:
-  bzip2 libaio1t64 libbz2-1.0 libc-bin libc-dev-bin libc-devtools libc-l10n
-  libc6 libc6-dev libc6-i386 libgumbo2 libjs-sphinxdoc libpci3 libre2-10
-  librubberband2 locales ocl-icd-libopencl1 pciutils python3-billiard
-  python3-click python3-dateutil python3-jinja2 python3-psutil python3-six
-24 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
-Need to get 14.0 MB of archives.
-After this operation, 58.4 kB of additional disk space will be used.
-Get:1 http://kali.darklab.sh/kali kali-rolling/main amd64 libc6-i386 amd64 2.37-15 [2460 kB]
-Get:2 http://kali.download/kali kali-rolling/main amd64 libc-devtools amd64 2.37-15 [54.6 kB]
-Get:5 http://mirrors.ocf.berkeley.edu/kali kali-rolling/main amd64 libc6 amd64 2.37-15 [2750 kB]
-Get:3 http://kali.download/kali kali-rolling/main amd64 libc6-dev amd64 2.37-15 [1906 kB]
-Get:8 http://kali.download/kali kali-rolling/main amd64 libbz2-1.0 amd64 1.0.8-5.1 [38.0 kB]
-Get:12 http://kali.download/kali kali-rolling/main amd64 libpci3 amd64 1:3.11.1-1 [74.6 kB]
-Get:10 http://mirrors.ocf.berkeley.edu/kali kali-rolling/main amd64 locales all 2.37-15 [3908 kB]
-Get:15 http://mirrors.ocf.berkeley.edu/kali kali-rolling/main amd64 libjs-sphinxdoc all 7.2.6-6 [150 kB]
-Get:20 http://mirrors.ocf.berkeley.edu/kali kali-rolling/main amd64 python3-click all 8.1.7-1 [94.0 kB]
-Get:21 http://mirrors.ocf.berkeley.edu/kali kali-rolling/main amd64 python3-six all 1.16.0-6 [16.3 kB]
-Get:22 http://mirrors.ocf.berkeley.edu/kali kali-rolling/main amd64 python3-dateutil all 2.9.0-2 [79.4 kB]
-Get:4 http://kali.darklab.sh/kali kali-rolling/main amd64 libc-dev-bin amd64 2.37-15 [46.9 kB]
-Get:6 http://kali.darklab.sh/kali kali-rolling/main amd64 libc-bin amd64 2.37-15 [602 kB]
-Get:7 http://kali.darklab.sh/kali kali-rolling/main amd64 bzip2 amd64 1.0.8-5.1 [40.3 kB]
-Get:9 http://kali.darklab.sh/kali kali-rolling/main amd64 libc-l10n all 2.37-15 [709 kB]
-Get:11 http://kali.darklab.sh/kali kali-rolling/main amd64 pciutils amd64 1:3.11.1-1 [124 kB]
-Get:13 http://http.kali.org/kali kali-rolling/main amd64 libaio1t64 amd64 0.3.113-8+kali1 [15.0 kB]
-Get:14 http://http.kali.org/kali kali-rolling/main amd64 libgumbo2 amd64 0.12.0+dfsg-2+b1 [111 kB]
-Get:16 http://http.kali.org/kali kali-rolling/main amd64 libre2-10 amd64 20230301-3+b1 [188 kB]
-Get:17 http://http.kali.org/kali kali-rolling/main amd64 librubberband2 amd64 3.3.0+dfsg-2+b1 [137 kB]
-Get:18 http://http.kali.org/kali kali-rolling/main amd64 ocl-icd-libopencl1 amd64 2.3.2-1+b1 [40.3 kB]
-Get:19 http://kali.darklab.sh/kali kali-rolling/main amd64 python3-billiard all 4.2.0-2 [73.6 kB]
-Get:23 http://kali.darklab.sh/kali kali-rolling/main amd64 python3-jinja2 all 3.1.3-1 [119 kB]
-Get:24 http://kali.darklab.sh/kali kali-rolling/main amd64 python3-psutil amd64 5.9.8-2 [225 kB]
-dpkg-preconfigure: unable to re-open stdin: 
-Fetched 14.0 MB in 8s (1646 kB/s)
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 457680 files and directories currently installed.)
-Preparing to unpack .../libc6-i386_2.37-15_amd64.deb ...
-Unpacking libc6-i386 (2.37-15) over (2.37-12) ...
-Preparing to unpack .../libc-devtools_2.37-15_amd64.deb ...
-Unpacking libc-devtools (2.37-15) over (2.37-12) ...
-Preparing to unpack .../libc6-dev_2.37-15_amd64.deb ...
-Unpacking libc6-dev:amd64 (2.37-15) over (2.37-12) ...
-Preparing to unpack .../libc-dev-bin_2.37-15_amd64.deb ...
-Unpacking libc-dev-bin (2.37-15) over (2.37-12) ...
-Preparing to unpack .../libc6_2.37-15_amd64.deb ...
-Unpacking libc6:amd64 (2.37-15) over (2.37-12) ...
-Setting up libc6:amd64 (2.37-15) ...
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 457680 files and directories currently installed.)
-Preparing to unpack .../libc-bin_2.37-15_amd64.deb ...
-Unpacking libc-bin (2.37-15) over (2.37-12) ...
-Setting up libc-bin (2.37-15) ...
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 457680 files and directories currently installed.)
-Preparing to unpack .../bzip2_1.0.8-5.1_amd64.deb ...
-Unpacking bzip2 (1.0.8-5.1) over (1.0.8-5+b2) ...
-dpkg: warning: old file '/bin/bzip2' is the same as several new files! (both '/usr/bin/bunzip2' and '/usr/bin/bzcat')
-dpkg: warning: old file '/bin/bzip2' is the same as several new files! (both '/usr/bin/bzcat' and '/usr/bin/bzip2')
-dpkg: warning: old file '/bin/bzcat' is the same as several new files! (both '/usr/bin/bunzip2' and '/usr/bin/bzcat')
-dpkg: warning: old file '/bin/bzcat' is the same as several new files! (both '/usr/bin/bzcat' and '/usr/bin/bzip2')
-dpkg: warning: old file '/bin/bunzip2' is the same as several new files! (both '/usr/bin/bunzip2' and '/usr/bin/bzcat')
-dpkg: warning: old file '/bin/bunzip2' is the same as several new files! (both '/usr/bin/bzcat' and '/usr/bin/bzip2')
-Preparing to unpack .../libbz2-1.0_1.0.8-5.1_amd64.deb ...
-Unpacking libbz2-1.0:amd64 (1.0.8-5.1) over (1.0.8-5+b2) ...
-Setting up libbz2-1.0:amd64 (1.0.8-5.1) ...
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 457678 files and directories currently installed.)
-Preparing to unpack .../00-libc-l10n_2.37-15_all.deb ...
-Unpacking libc-l10n (2.37-15) over (2.37-12) ...
-Preparing to unpack .../01-locales_2.37-15_all.deb ...
-Unpacking locales (2.37-15) over (2.37-12) ...
-Preparing to unpack .../02-pciutils_1%3a3.11.1-1_amd64.deb ...
-Unpacking pciutils (1:3.11.1-1) over (1:3.10.0-2+b1) ...
-Preparing to unpack .../03-libpci3_1%3a3.11.1-1_amd64.deb ...
-Unpacking libpci3:amd64 (1:3.11.1-1) over (1:3.10.0-2+b1) ...
-Preparing to unpack .../04-libaio1t64_0.3.113-8+kali1_amd64.deb ...
-Unpacking libaio1t64:amd64 (0.3.113-8+kali1) over (0.3.113-8) ...
-Preparing to unpack .../05-libgumbo2_0.12.0+dfsg-2+b1_amd64.deb ...
-Unpacking libgumbo2:amd64 (0.12.0+dfsg-2+b1) over (0.12.0+dfsg-2) ...
-Preparing to unpack .../06-libjs-sphinxdoc_7.2.6-6_all.deb ...
-Unpacking libjs-sphinxdoc (7.2.6-6) over (7.2.6-4) ...
-Preparing to unpack .../07-libre2-10_20230301-3+b1_amd64.deb ...
-Unpacking libre2-10:amd64 (20230301-3+b1) over (20230301-3) ...
-Preparing to unpack .../08-librubberband2_3.3.0+dfsg-2+b1_amd64.deb ...
-Unpacking librubberband2:amd64 (3.3.0+dfsg-2+b1) over (3.3.0+dfsg-2) ...
-Preparing to unpack .../09-ocl-icd-libopencl1_2.3.2-1+b1_amd64.deb ...
-Unpacking ocl-icd-libopencl1:amd64 (2.3.2-1+b1) over (2.3.2-1) ...
-Preparing to unpack .../10-python3-billiard_4.2.0-2_all.deb ...
-Unpacking python3-billiard (4.2.0-2) over (4.2.0-1) ...
-Preparing to unpack .../11-python3-click_8.1.7-1_all.deb ...
-Unpacking python3-click (8.1.7-1) over (8.1.6-1) ...
-Preparing to unpack .../12-python3-six_1.16.0-6_all.deb ...
-Unpacking python3-six (1.16.0-6) over (1.16.0-4) ...
-Preparing to unpack .../13-python3-dateutil_2.9.0-2_all.deb ...
-Unpacking python3-dateutil (2.9.0-2) over (2.8.2-3) ...
-Preparing to unpack .../14-python3-jinja2_3.1.3-1_all.deb ...
-Unpacking python3-jinja2 (3.1.3-1) over (3.1.2-1) ...
-Preparing to unpack .../15-python3-psutil_5.9.8-2_amd64.deb ...
-Unpacking python3-psutil (5.9.8-2) over (5.9.8-1) ...
-Setting up libc-l10n (2.37-15) ...
-Setting up python3-billiard (4.2.0-2) ...
-Setting up libre2-10:amd64 (20230301-3+b1) ...
-Setting up python3-click (8.1.7-1) ...
-Setting up bzip2 (1.0.8-5.1) ...
-Setting up locales (2.37-15) ...
-Generating locales (this might take a while)...
-  en_US.UTF-8... done
-Generation complete.
-Setting up python3-psutil (5.9.8-2) ...
-Setting up python3-six (1.16.0-6) ...
-Setting up python3-jinja2 (3.1.3-1) ...
-Setting up libgumbo2:amd64 (0.12.0+dfsg-2+b1) ...
-Setting up libjs-sphinxdoc (7.2.6-6) ...
-Setting up librubberband2:amd64 (3.3.0+dfsg-2+b1) ...
-Setting up libpci3:amd64 (1:3.11.1-1) ...
-Setting up libaio1t64:amd64 (0.3.113-8+kali1) ...
-'libaio.so.1' -> 'libaio.so.1t64'
-Setting up ocl-icd-libopencl1:amd64 (2.3.2-1+b1) ...
-Setting up libc6-i386 (2.37-15) ...
-Setting up python3-dateutil (2.9.0-2) ...
-Setting up libc-dev-bin (2.37-15) ...
-Setting up libc-devtools (2.37-15) ...
-Setting up pciutils (1:3.11.1-1) ...
-Setting up libc6-dev:amd64 (2.37-15) ...
-Processing triggers for doc-base (0.11.2) ...
-Processing 1 changed doc-base file...
-Processing triggers for libc-bin (2.37-15) ...
-Processing triggers for man-db (2.12.0-3) ...
-Processing triggers for kali-menu (2023.4.7) ...
-
-WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
-
-Reading package lists...
-Building dependency tree...
-Reading state information...
-0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
-
-=====
-VM Name:	prlrh9
-VM UUID:	ed3df1c0-7b23-4318-a407-995a0ca5f1f2
-OS ID:	redhat
------
-Creating the snapshot...
-The snapshot with id {fe9c6b79-3ce8-49f5-9032-046e0f1fe05e} has been successfully created.
-Updating Subscription Management repositories.
-52 files removed
-Updating Subscription Management repositories.
-Extra Packages for Enterprise Linux 9 - x86_64  1.3 MB/s |  21 MB     00:15    
-Extra Packages for Enterprise Linux 9 openh264  1.3 kB/s | 2.5 kB     00:01    
-Red Hat CodeReady Linux Builder for RHEL 9 x86_ 1.2 MB/s | 7.0 MB     00:05    
-Red Hat Enterprise Linux 9 for x86_64 - AppStre 3.7 MB/s |  30 MB     00:08    
-Red Hat Enterprise Linux 9 for x86_64 - BaseOS  1.6 MB/s |  19 MB     00:11    
-Red Hat Enterprise Linux 9 for x86_64 - Supplem 2.6 kB/s | 3.0 kB     00:01    
-Dependencies resolved.
-================================================================================
- Package  Arch       Version            Repository                         Size
-================================================================================
-Upgrading:
- less     x86_64     590-3.el9_3        rhel-9-for-x86_64-baseos-rpms     166 k
-
-Transaction Summary
-================================================================================
-Upgrade  1 Package
-
-Total download size: 166 k
-Downloading Packages:
-less-590-3.el9_3.x86_64.rpm                     228 kB/s | 166 kB     00:00    
---------------------------------------------------------------------------------
-Total                                           227 kB/s | 166 kB     00:00     
-Running transaction check
-Transaction check succeeded.
-Running transaction test
-Transaction test succeeded.
-Running transaction
-  Preparing        :                                                        1/1 
-  Upgrading        : less-590-3.el9_3.x86_64                                1/2 
-warning: Unable to get systemd shutdown inhibition lock: Could not activate remote peer.
-
-  Cleanup          : less-590-2.el9_2.x86_64                                2/2 
-  Running scriptlet: less-590-2.el9_2.x86_64                                2/2 
-error: Couldn't create temporary file for %transfiletriggerin(glibc-common-2.34-83.el9_3.12.x86_64): Input/output error
-
-Error in <unknown> scriptlet in rpm package less
-error: error creating temporary file /var/tmp/rpm-tmp.viwf8e: Input/output error
-error: Couldn't create temporary file for %transfiletriggerin(man-db-2.9.3-7.el9.x86_64): Input/output error
-
-Error in <unknown> scriptlet in rpm package less
-error: error creating temporary file /var/tmp/rpm-tmp.h3xmPH: Input/output error
-error: Couldn't create temporary file for %transfiletriggerpostun(man-db-2.9.3-7.el9.x86_64): Input/output error
-
-Error in <unknown> scriptlet in rpm package less
-  Verifying        : less-590-3.el9_3.x86_64                                1/2 
-  Verifying        : less-590-2.el9_2.x86_64                                2/2 
-Installed products updated.
-
-Upgraded:
-  less-590-3.el9_3.x86_64                                                       
-
-Complete!
-Updating Subscription Management repositories.
-Last metadata expiration check: 0:00:05 ago on Mon Apr  8 21:59:02 2024.
-Dependencies resolved.
-Nothing to do.
-Complete!
-Updating Subscription Management repositories.
-Last metadata expiration check: 0:00:07 ago on Mon Apr  8 21:59:02 2024.
-Dependencies resolved.
-Nothing to do.
-Complete!
-Failed to set wall message, ignoring: Could not activate remote peer.
-Call to PowerOff failed: Could not activate remote peer.
-
-=====
-VM Name:	prlubuntu
-VM UUID:	f9d091e8-7595-415b-9180-34bc6a06aaf4
-OS ID:	debian
------
-Creating the snapshot...
-The snapshot with id {5adf20c5-0505-44f1-b760-a596d22b2235} has been successfully created.
-
-WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
-
-
-WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
-
-Hit:1 http://us.archive.ubuntu.com/ubuntu jammy InRelease
-Get:2 http://us.archive.ubuntu.com/ubuntu jammy-updates InRelease [119 kB]
-Get:3 http://security.ubuntu.com/ubuntu jammy-security InRelease [110 kB]
-Hit:4 http://us.archive.ubuntu.com/ubuntu jammy-backports InRelease
-Get:5 http://us.archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [1558 kB]
-Get:6 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [1342 kB]
-Get:7 http://us.archive.ubuntu.com/ubuntu jammy-updates/main i386 Packages [609 kB]
-Get:8 http://us.archive.ubuntu.com/ubuntu jammy-updates/main Translation-en [297 kB]
-Get:9 http://us.archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [1695 kB]
-Get:10 http://security.ubuntu.com/ubuntu jammy-security/main i386 Packages [443 kB]
-Get:11 http://security.ubuntu.com/ubuntu jammy-security/main Translation-en [237 kB]
-Get:12 http://security.ubuntu.com/ubuntu jammy-security/restricted i386 Packages [33.6 kB]
-Get:13 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [1662 kB]
-Get:14 http://us.archive.ubuntu.com/ubuntu jammy-updates/restricted Translation-en [285 kB]
-Get:15 http://us.archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1060 kB]
-Get:16 http://us.archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [49.7 kB]
-Get:17 http://us.archive.ubuntu.com/ubuntu jammy-updates/multiverse Translation-en [12.1 kB]
-Get:18 http://security.ubuntu.com/ubuntu jammy-security/restricted Translation-en [280 kB]
-Get:19 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [37.2 kB]
-Get:20 http://security.ubuntu.com/ubuntu jammy-security/multiverse Translation-en [7588 B]
-Fetched 9838 kB in 6s (1579 kB/s)
-Reading package lists...
-Building dependency tree...
-Reading state information...
-All packages are up to date.
-
-WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
-
-Reading package lists...
-Building dependency tree...
-Reading state information...
-Calculating upgrade...
-Get more security updates through Ubuntu Pro with 'esm-apps' enabled:
-  editorconfig libeditorconfig0
-Learn more about Ubuntu Pro at https://ubuntu.com/pro
-0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
-
-WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
-
-Reading package lists...
-Building dependency tree...
-Reading state information...
-0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
-System is Microsoft_Windows_11_Pro.
+Copr repo for freeipa-4-8 owned by @freeipa      20 kB/s |  27 kB     00:01    
+Fedora 38 - x86_64                              1.9 MB/s |  83 MB     00:44    
