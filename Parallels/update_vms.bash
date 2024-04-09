@@ -1,4 +1,4 @@
-#!/bin/bash -xv
+#!/bin/bash
 
 function STARTVMS {
     for uuid in $(prlctl list -a | awk '{print $1}' | sed -e 's/{//g' -e 's/}//g' ); do

@@ -265,3 +265,283 @@ The snapshot with id {73dc76f4-89e9-4eca-a079-48d277aba902} has been successfull
 47 files removed
 Copr repo for freeipa-4-8 owned by @freeipa      20 kB/s |  27 kB     00:01    
 Fedora 38 - x86_64                              1.9 MB/s |  83 MB     00:44    
+Fedora 38 openh264 (From Cisco) - x86_64        1.4 kB/s | 2.6 kB     00:01    
+Fedora Modular 38 - x86_64                      675 kB/s | 2.8 MB     00:04    
+Fedora 38 - x86_64 - Updates                    2.7 MB/s |  41 MB     00:15    
+Fedora Modular 38 - x86_64 - Updates            765 kB/s | 2.1 MB     00:02    
+Dependencies resolved.
+Nothing to do.
+Complete!
+Last metadata expiration check: 0:00:06 ago on Tue Apr  9 00:21:22 2024.
+Dependencies resolved.
+Nothing to do.
+Complete!
+Last metadata expiration check: 0:00:08 ago on Tue Apr  9 00:21:22 2024.
+Dependencies resolved.
+Nothing to do.
+Complete!
++ '[' linux == linux ']'
++ prlctl exec 00108318-138d-4ae6-be80-3520f4a0564d 'shutdown -r now'
++ unset os
++ unset id
++ unset id_like
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' 764ff407-a5cb-4e34-b6b3-21f44110b7e7 '!=' UUID ']'
+prlctl list --all | awk -v uuid="\{$uuid\}" '$1 == uuid {print $NF}'
+++ prlctl list --all
+++ awk -v 'uuid=\{764ff407-a5cb-4e34-b6b3-21f44110b7e7\}' '$1 == uuid {print $NF}'
++ vmname=prlkali
++ prlctl exec 764ff407-a5cb-4e34-b6b3-21f44110b7e7 'uname -a'
+echo $?
+++ echo 0
++ '[' 0 == 0 ']'
++ os=linux
++ prlctl exec 764ff407-a5cb-4e34-b6b3-21f44110b7e7 systeminfo
+echo $?
+++ echo 127
++ '[' 127 == 0 ']'
++ '[' linux == linux ']'
+prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}'
+++ prlctl exec 764ff407-a5cb-4e34-b6b3-21f44110b7e7 'cat /etc/os-release'
+++ awk -F= '$1 == "ID" {print $2}'
++ id=kali
+prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g'
+++ prlctl exec 764ff407-a5cb-4e34-b6b3-21f44110b7e7 'cat /etc/os-release'
+++ awk -F= '$1 == "ID_LIKE" {print $2}'
+++ sed -e 's/"//g' -e 's/ /_/g'
++ id_like=debian
++ '[' -z debian ']'
++ case "$id_like" in
++ printf '\n=====\nVM Name:%s\nVM UUID:%s\nOS ID:%s\n-----\n' prlkali 764ff407-a5cb-4e34-b6b3-21f44110b7e7 debian
+
+=====
+VM Name:prlkali
+VM UUID:764ff407-a5cb-4e34-b6b3-21f44110b7e7
+OS ID:debian
+-----
++ OSUPDATE
++ case $id_like in
+date
+++ date
++ prlctl snapshot 764ff407-a5cb-4e34-b6b3-21f44110b7e7 --description 'Scripted update Tue Apr  9 00:21:33 HST 2024'
+Creating the snapshot...
+The snapshot with id {c774545d-49d2-407e-801c-b8484e23ce24} has been successfully created.
++ prlctl exec 764ff407-a5cb-4e34-b6b3-21f44110b7e7 'apt clean all && apt update -y && apt full-upgrade -y && apt auto-remove -y && touch /.autorelabel'
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Hit:1 http://http.kali.org/kali kali-rolling InRelease
+Hit:2 https://brave-browser-apt-release.s3.brave.com stable InRelease
+Reading package lists...
+Building dependency tree...
+Reading state information...
+All packages are up to date.
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Calculating upgrade...
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Reading package lists...
+Building dependency tree...
+Reading state information...
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
++ '[' linux == linux ']'
++ prlctl exec 764ff407-a5cb-4e34-b6b3-21f44110b7e7 'shutdown -r now'
++ unset os
++ unset id
++ unset id_like
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' ed3df1c0-7b23-4318-a407-995a0ca5f1f2 '!=' UUID ']'
+prlctl list --all | awk -v uuid="\{$uuid\}" '$1 == uuid {print $NF}'
+++ prlctl list --all
+++ awk -v 'uuid=\{ed3df1c0-7b23-4318-a407-995a0ca5f1f2\}' '$1 == uuid {print $NF}'
++ vmname=prlrh9
++ prlctl exec ed3df1c0-7b23-4318-a407-995a0ca5f1f2 'uname -a'
+echo $?
+++ echo 0
++ '[' 0 == 0 ']'
++ os=linux
++ prlctl exec ed3df1c0-7b23-4318-a407-995a0ca5f1f2 systeminfo
+echo $?
+++ echo 127
++ '[' 127 == 0 ']'
++ '[' linux == linux ']'
+prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}'
+++ prlctl exec ed3df1c0-7b23-4318-a407-995a0ca5f1f2 'cat /etc/os-release'
+++ awk -F= '$1 == "ID" {print $2}'
++ id='"rhel"'
+prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g'
+++ prlctl exec ed3df1c0-7b23-4318-a407-995a0ca5f1f2 'cat /etc/os-release'
+++ awk -F= '$1 == "ID_LIKE" {print $2}'
+++ sed -e 's/"//g' -e 's/ /_/g'
++ id_like=fedora
++ '[' -z fedora ']'
++ case "$id_like" in
++ id_like=redhat
++ printf '\n=====\nVM Name:%s\nVM UUID:%s\nOS ID:%s\n-----\n' prlrh9 ed3df1c0-7b23-4318-a407-995a0ca5f1f2 redhat
+
+=====
+VM Name:prlrh9
+VM UUID:ed3df1c0-7b23-4318-a407-995a0ca5f1f2
+OS ID:redhat
+-----
++ OSUPDATE
++ case $id_like in
+date
+++ date
++ prlctl snapshot ed3df1c0-7b23-4318-a407-995a0ca5f1f2 --description 'Scripted update Tue Apr  9 00:21:41 HST 2024'
+Creating the snapshot...
+The snapshot with id {c54728d4-3ec2-432e-8375-9388c9610bdf} has been successfully created.
++ prlctl exec ed3df1c0-7b23-4318-a407-995a0ca5f1f2 'dnf clean all && dnf update -y && dnf distro-sync -y && dnf autoremove -y && touch /.autorelabel'
+Updating Subscription Management repositories.
+52 files removed
+Updating Subscription Management repositories.
+Extra Packages for Enterprise Linux 9 - x86_64  1.1 MB/s |  21 MB     00:18    
+Extra Packages for Enterprise Linux 9 openh264  1.4 kB/s | 2.5 kB     00:01    
+Red Hat CodeReady Linux Builder for RHEL 9 x86_ 1.5 MB/s | 7.0 MB     00:04    
+Red Hat Enterprise Linux 9 for x86_64 - AppStre 5.8 MB/s |  30 MB     00:05    
+Red Hat Enterprise Linux 9 for x86_64 - BaseOS  1.6 MB/s |  19 MB     00:11    
+Red Hat Enterprise Linux 9 for x86_64 - Supplem 2.6 kB/s | 3.0 kB     00:01    
+Dependencies resolved.
+Nothing to do.
+Complete!
+Updating Subscription Management repositories.
+Last metadata expiration check: 0:00:04 ago on Tue Apr  9 00:22:47 2024.
+Dependencies resolved.
+Nothing to do.
+Complete!
+Updating Subscription Management repositories.
+Last metadata expiration check: 0:00:06 ago on Tue Apr  9 00:22:47 2024.
+Dependencies resolved.
+Nothing to do.
+Complete!
++ '[' linux == linux ']'
++ prlctl exec ed3df1c0-7b23-4318-a407-995a0ca5f1f2 'shutdown -r now'
+Failed to set wall message, ignoring: Could not activate remote peer.
+Call to Reboot failed: Could not activate remote peer.
++ unset os
++ unset id
++ unset id_like
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' f9d091e8-7595-415b-9180-34bc6a06aaf4 '!=' UUID ']'
+prlctl list --all | awk -v uuid="\{$uuid\}" '$1 == uuid {print $NF}'
+++ prlctl list --all
+++ awk -v 'uuid=\{f9d091e8-7595-415b-9180-34bc6a06aaf4\}' '$1 == uuid {print $NF}'
++ vmname=prlubuntu
++ prlctl exec f9d091e8-7595-415b-9180-34bc6a06aaf4 'uname -a'
+echo $?
+++ echo 0
++ '[' 0 == 0 ']'
++ os=linux
++ prlctl exec f9d091e8-7595-415b-9180-34bc6a06aaf4 systeminfo
+echo $?
+++ echo 127
++ '[' 127 == 0 ']'
++ '[' linux == linux ']'
+prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID" {print $2}'
+++ prlctl exec f9d091e8-7595-415b-9180-34bc6a06aaf4 'cat /etc/os-release'
+++ awk -F= '$1 == "ID" {print $2}'
++ id=ubuntu
+prlctl exec $uuid "cat /etc/os-release" | awk -F= '$1 == "ID_LIKE" {print $2}' | sed -e 's/"//g' -e 's/ /_/g'
+++ prlctl exec f9d091e8-7595-415b-9180-34bc6a06aaf4 'cat /etc/os-release'
+++ awk -F= '$1 == "ID_LIKE" {print $2}'
+++ sed -e 's/"//g' -e 's/ /_/g'
++ id_like=debian
++ '[' -z debian ']'
++ case "$id_like" in
++ printf '\n=====\nVM Name:%s\nVM UUID:%s\nOS ID:%s\n-----\n' prlubuntu f9d091e8-7595-415b-9180-34bc6a06aaf4 debian
+
+=====
+VM Name:prlubuntu
+VM UUID:f9d091e8-7595-415b-9180-34bc6a06aaf4
+OS ID:debian
+-----
++ OSUPDATE
++ case $id_like in
+date
+++ date
++ prlctl snapshot f9d091e8-7595-415b-9180-34bc6a06aaf4 --description 'Scripted update Tue Apr  9 00:22:58 HST 2024'
+Creating the snapshot...
+The snapshot with id {433dec88-82d8-4a7c-a866-a778c42e1565} has been successfully created.
++ prlctl exec f9d091e8-7595-415b-9180-34bc6a06aaf4 'apt clean all && apt update -y && apt full-upgrade -y && apt auto-remove -y && touch /.autorelabel'
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Hit:1 http://us.archive.ubuntu.com/ubuntu jammy InRelease
+Hit:2 http://security.ubuntu.com/ubuntu jammy-security InRelease
+Hit:3 http://us.archive.ubuntu.com/ubuntu jammy-updates InRelease
+Hit:4 http://us.archive.ubuntu.com/ubuntu jammy-backports InRelease
+Reading package lists...
+Building dependency tree...
+Reading state information...
+All packages are up to date.
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Calculating upgrade...
+Get more security updates through Ubuntu Pro with 'esm-apps' enabled:
+  editorconfig libeditorconfig0
+Learn more about Ubuntu Pro at https://ubuntu.com/pro
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Reading package lists...
+Building dependency tree...
+Reading state information...
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
++ '[' linux == linux ']'
++ prlctl exec f9d091e8-7595-415b-9180-34bc6a06aaf4 'shutdown -r now'
++ unset os
++ unset id
++ unset id_like
++ for uuid in '$(prlctl list -a | awk '\''{print $1}'\'' | sed -e '\''s/{//g'\'' -e '\''s/}//g'\'' )'
++ '[' d82dde3c-cbb7-4384-bcef-4e85c3223476 '!=' UUID ']'
+prlctl list --all | awk -v uuid="\{$uuid\}" '$1 == uuid {print $NF}'
+++ prlctl list --all
+++ awk -v 'uuid=\{d82dde3c-cbb7-4384-bcef-4e85c3223476\}' '$1 == uuid {print $NF}'
++ vmname=prlwindows
++ prlctl exec d82dde3c-cbb7-4384-bcef-4e85c3223476 'uname -a'
+echo $?
+++ echo 2
++ '[' 2 == 0 ']'
++ prlctl exec d82dde3c-cbb7-4384-bcef-4e85c3223476 systeminfo
+echo $?
+++ echo 0
++ '[' 0 == 0 ']'
++ os=windows
++ '[' windows == linux ']'
++ '[' windows == windows ']'
+prlctl exec $uuid "systeminfo" | dos2unix | awk -F: '$1 == "OS Name" {print $NF}' | sed -e 's/  //g' -e 's/^ //g' -e 's/ /_/g' | tr -d [[:blank:]]
+++ prlctl exec d82dde3c-cbb7-4384-bcef-4e85c3223476 systeminfo
+++ dos2unix
+++ awk -F: '$1 == "OS Name" {print $NF}'
+++ sed -e 's/  //g' -e 's/^ //g' -e 's/ /_/g'
+++ tr -d '[[:blank:]]'
++ id_like=Microsoft_Windows_11_Pro
++ OSUPDATE
++ case $id_like in
+ echo $id_like | sed 's/_/ /g'
+++ echo Microsoft_Windows_11_Pro
+++ sed 's/_/ /g'
++ printf 'System is %s.\n' 'Microsoft Windows 11 Pro'
+System is Microsoft Windows 11 Pro.
++ '[' windows == linux ']'
++ unset os
++ unset id
++ unset id_like
